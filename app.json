@@ -4,6 +4,9 @@
       "eas": {
         "projectId": "b67846d2-452a-4dc7-9942-a04b6455a1a5"
       }
+    },
+    "android": {
+      "package": "com.jsmithjj.xch555reactroot"
     }
   }
 }
