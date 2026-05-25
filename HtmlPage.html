@@ -1,0 +1,378 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script>
+       
+        function CheckAkhar()
+        {
+          
+            var bval = document.getElementById("TextBox1").value;
+            bval = bval.toUpperCase();
+            while (bval.includes("("))
+                bval = bval.replace("(", "*");
+            while (bval.includes("INTO"))
+                bval = bval.replace("INTO", "*");
+            while (bval.includes("IN"))
+                bval = bval.replace("IN", "*");
+            while (bval.includes("="))
+            bval = bval.replace("=", "*");
+
+            while (bval.includes("!"))
+                bval = bval.replace("!", ",");
+            while (bval.includes("@"))
+                bval = bval.replace("@", ",");
+            while (bval.includes("#"))
+                bval = bval.replace("#", ",");
+            while (bval.includes("$"))
+                bval = bval.replace("$", ",");
+            while (bval.includes("%"))
+                bval = bval.replace("%", ",");
+            while (bval.includes("^"))
+                bval = bval.replace("^", ",");
+            while (bval.includes("&"))
+                bval = bval.replace("&", ",");
+            while (bval.includes("-"))
+                bval = bval.replace("-", ",");
+            while (bval.includes(" "))
+                bval = bval.replace(" ", ",");
+            while (bval.includes("/"))
+                bval = bval.replace("/", ",");
+            while (bval.includes("|"))
+                bval = bval.replace("|", ",");
+            while (bval.includes("a"))
+                bval = bval.replace("a", "A");
+            while (bval.includes("b"))
+            bval = bval.replace("b", "B");
+           
+            document.getElementById("TextBox1").value= bval;
+            
+
+          
+            
+        }
+
+
+
+        function IsNonDigit(str,i,akharchar)
+        {
+            var ascode = str.charCodeAt(i);
+            
+            if (ascode < 48 || ascode > 57 || isNaN(ascode)) {
+                return true;
+                //alert(ascode);
+            }
+            else {
+                var charcount = 0;
+
+                for (j = 0; j < str.length; j++) {
+                    var asco = str.charCodeAt(j);
+                    var asco1 = akharchar.charCodeAt(0);
+                    if (asco >= 48 && asco <= 57) {
+                        if (asco != ascode)
+                            return true;
+                    }
+                    else if (asco1 == asco)
+                        charcount++;
+                    else
+                        return true;
+
+                }
+                if (charcount > 1) return true;
+            }
+
+            return false;
+
+        }
+
+        function Mycode() {
+
+            var bval = document.getElementById("TextBox1").value;//document.getElementById('<%=TextBox1.ClientID%>').value;
+            var msg;
+            var finalnumlist = "";
+            const numberList1 = (bval
+                    .split("*"));
+
+            if (numberList1.length == 1) {
+                msg = "Amount Not Found against those number :- " + bval;
+                alert(msg);
+                return false;
+            }
+            if (numberList1.length > 2) {
+                msg = "Multiple Amount ( ";
+                for (var i = 1; i < numberList1.length; i = i + 1)
+                    msg = msg + numberList1[i] + ", ";
+
+                msg = msg + " ) against those number :-" + numberList1[0];
+                alert(msg);
+                return false;
+            }
+
+
+
+            var numlist = numberList1[0];
+            var nums = numlist.split(",");
+            var amtlist = "";
+
+            var correctamount = "";
+            for (var j = 0; j < numberList1[1].length; j++)   // remove non digit from amount
+            {
+                var ascode = numberList1[1].charCodeAt(j);
+               
+               
+                if (ascode >= 48 && ascode <= 57) {
+                    correctamount = correctamount + numberList1[1][j]; 
+                }
+
+            }
+            numberList1[1] = correctamount;
+         
+
+
+            // making list of number and amouunt in order with coma seprate
+
+
+            for (var i = 0 ; i < nums.length; i = i + 1) {
+
+                var str = nums[i];
+                if (str.trim() != "")
+                {
+                    if (str.length > 2 || str.includes("A") || str.includes("B"))
+                    {
+                        var ind;
+                        var newstr;
+                        if (str.includes("A")) {
+                            ind = str.indexOf("A");
+                            if (ind == 0) {
+
+                                if (IsNonDigit(str,1,"A")) { alert(str + " is Not A valid Number"); return false; }
+                                newstr = str[1] + str[1] + str[1];                              
+                                nums[i] = newstr;
+
+                            }
+                            else {
+                                if (IsNonDigit(str,0,"A")) { alert(str + " is Not A valid Number"); return false; }
+                                newstr = str[0] + str[0] + str[0];
+                                nums[i] = newstr;
+                            }
+                        }
+                        if (str.includes("B")) {
+                            ind = str.indexOf("B");
+                            if (ind == 0) {
+                                if (IsNonDigit(str,1,"B")) { alert(str + " is Not A valid Number"); return false; }
+                                newstr = str[1] + str[1] + str[1] + str[1];
+                                nums[i] = newstr;
+                            }
+                            else {
+                                if (IsNonDigit(str,0,"B")) { alert(str + " is Not A valid Number"); return false; }
+                                newstr = str[0] + str[0] + str[0] + str[0];
+                                nums[i] = newstr;
+                            }
+                        }
+
+                        
+                    } // end if str.length > 2 || str.includes("A") || str.includes("B")
+                    else
+                    {
+                        // Check in number is any char or other Value
+                        for(var j=0;j<str.length;j=j+1)
+                        {
+                            var ascode = str.charCodeAt(j);
+                            if(ascode<48 || ascode>57)
+                            { alert( str + " is Not A valid Number"); return false; }
+                        }
+                    }
+
+                    //----------------------------- adding number and amount in diffretn list 
+                    if (i == nums.length - 1) {
+                        amtlist = amtlist + numberList1[1];
+                        finalnumlist = finalnumlist + nums[i];
+                    }
+                    else {
+                        amtlist = amtlist + numberList1[1] + ",";
+                        finalnumlist = finalnumlist + nums[i] + ",";
+                    }
+
+
+                
+
+
+                }// end of if str.trim() != ""
+
+            } // End of Loop var i = 0 ; i < nums.length; i = i + 1
+
+
+
+
+
+          //  document.getElementById("TextBox1").value="";
+
+          
+
+
+
+
+
+            var newRow = document.getElementById('addtrn').insertRow();
+            newRow.innerHTML =
+                '<tr><th><input type="text" class="form-control" name="trn_number[]" value="' +
+               finalnumlist +
+                '" placeholder="Number" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" onkeyup="checkshift(this)"></th> <th><input type="text" class="form-control" value="' +
+             amtlist +
+                '" name="trn_amount[]" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" placeholder="Amount" ></th><td><span class="delete" onClick="$(this).parent().parent().remove();"> X </span></td></tr>';
+
+
+            return true;
+        }
+
+
+        //--------------------------------------------------from to Amount
+
+        function IscorrectDigit(str)
+        {
+            for (var j = 0; j < str.length; j = j + 1) {
+                var ascode = str.charCodeAt(j);
+                if (ascode < 48 || ascode > 57)
+                { return true; }
+            }
+            return false;
+        }
+        function MyAkhar() {
+           
+            var fr = document.getElementById("frmtxt").value;
+           var to = document.getElementById("totxt").value;
+           var amt = document.getElementById("amttxt").value;
+            
+            if (IscorrectDigit(fr)) { alert(fr+"From number is not Valid"); return; }
+            if (IscorrectDigit(to)) { alert(to+"To number is not Valid"); return; }
+            if (IscorrectDigit(amt)) { alert(amt+"amount is not Valid"); return; }
+            fr = parseInt(fr);
+            to = parseInt(to);
+            if(fr>to)
+            { alert("From Number is Greater Then To Number"); return;}
+            var fromtonumberlist = "";
+            var amountlist=""
+            for (var j = fr; j <= to;j=j+1)
+            {
+                fromtonumberlist = fromtonumberlist + j + ",";
+                amountlist = amountlist + amt + ",";
+               
+            }
+
+
+
+            var newRow = document.getElementById('addtrn').insertRow();
+            newRow.innerHTML =
+                '<tr><th><input type="text" class="form-control" name="trn_number[]" value="' +
+               fromtonumberlist +
+                '" placeholder="Number" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" onkeyup="checkshift(this)"></th> <th><input type="text" class="form-control" value="' +
+             amountlist +
+                '" name="trn_amount[]" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" placeholder="Amount" ></th><td><span class="delete" onClick="$(this).parent().parent().remove();"> X </span></td></tr>';
+
+        }
+        //------------------------------------------------end of from To
+
+
+        //--------------------------------------------------Cross Number
+        function Mycros()
+        {
+            var crnum1 = document.getElementById("crnum1").value;
+            var crnum2 = document.getElementById("crnum2").value;
+            var amt = document.getElementById("cramt").value;
+
+
+            if (IscorrectDigit(crnum1)) { alert(crnum1 + "Cross number 1 is not Valid"); return; }
+            if (IscorrectDigit(crnum2)) { alert(crnum2 + "Cross number 2 is not Valid"); return; }
+            if (IscorrectDigit(amt)) { alert(amt + "amount is not Valid"); return; }
+            var crnumlist = "";
+            var cramtlist = "";
+            for(var i=0;i<crnum1.length;i=i+1)
+            {
+                for(var j=0;j<crnum2.length;j=j+1)
+                {
+                    crnumlist = crnumlist + crnum1[i] + crnum2[j] + ",";
+                    cramtlist = cramtlist + amt + ",";
+                }
+            }
+
+            var newRow = document.getElementById('addtrn').insertRow();
+            newRow.innerHTML =
+                '<tr><th><input type="text" class="form-control" name="trn_number[]" value="' +
+               crnumlist +
+                '" placeholder="Number" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" onkeyup="checkshift(this)"></th> <th><input type="text" class="form-control" value="' +
+             cramtlist +
+                '" name="trn_amount[]" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" placeholder="Amount" ></th><td><span class="delete" onClick="$(this).parent().parent().remove();"> X </span></td></tr>';
+
+                //crnum1
+        }
+
+        //---------------------------------------------------End Cros
+    </script>
+
+</head>
+<body>
+
+    <div>
+        <table id="addtrn">
+            <thead>
+                <tr>
+                    <th><input type="text" class="form-control" name="trn_number[]" maxlength="2" placeholder="Number" onfocus="checkshift(this)"></th>
+                    <th><input type="text" class="form-control" name="trn_amount[]" maxlength="6" placeholder="Amount" onfocus="checkshift(this)"></th>
+
+                </tr>
+            </thead>
+        </table>
+
+
+
+        <br />
+<!--       <asp:TextBox ID="TextBox1" runat="server" TextMode="MultiLine" Rows="10" Width="400"></asp:TextBox>
+    --> 
+
+        <textarea name="TextBox1" id="TextBox1" rows="10" cols="100" onchange="CheckAkhar()" ></textarea>
+
+        <br />
+
+
+        <input type="button" onclick="Mycode()" value="Get Data" />
+
+        
+
+        <br />
+
+
+      
+        <table>
+            <thead>
+                <tr><td>From</td><td>To</td><td>amount</td></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td> <input type="text" name="frmtxt" id="frmtxt" /></td>
+                    <td><input type="text" name="totxt" id="totxt" /></td>
+                    <td><input type="text" name="amttxt" id="amttxt" /></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <input type="button" onclick="MyAkhar()" value="Get Data" name="frto" id="frTo" />
+       
+        <table>
+            <thead>
+                <tr><td>Number 1</td><td>Number 2</td><td>amount</td></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td> <input type="text" name="crnum1" id="crnum1" /></td>
+                    <td><input type="text" name="crnum2" id="crnum2" /></td>
+                    <td><input type="text" name="cramt" id="cramt" /></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <input type="button" onclick="Mycros()" value="Get Data" name="frto" id="frTo" />
+
+    </div>
+
+</body>
+</html>

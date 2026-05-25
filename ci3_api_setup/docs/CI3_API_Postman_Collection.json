@@ -1,0 +1,589 @@
+{
+  "info": {
+    "_postman_id": "d7ef7a10-6df5-4bb8-95e9-555ci3api0001",
+    "name": "555 XCH CI3 API v1",
+    "description": "Importable Postman collection for the generated CodeIgniter 3 API layer.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://your-domain.com/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parent_selection_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ledger_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parent_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "transaction_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.data && json.data.token) {",
+                  "  if (json.data.parent_selection_required) {",
+                  "    pm.collectionVariables.set('parent_selection_token', json.data.token);",
+                  "    if (json.data.parent_id) pm.collectionVariables.set('parent_id', json.data.parent_id);",
+                  "  } else {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    if (json.data.user && json.data.user.id) pm.collectionVariables.set('ledger_id', json.data.user.id);",
+                  "  }",
+                  "}",
+                  "pm.test('Response has valid status flag', function () {",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Logs in using tbl_ledger username/password. Saves token automatically."
+          },
+          "response": []
+        },
+        {
+          "name": "Select Child Ledger",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  if (json.data.user && json.data.user.id) pm.collectionVariables.set('ledger_id', json.data.user.id);",
+                  "}",
+                  "pm.test('Child selected or validation returned', function () {",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{parent_selection_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"child_id\": {{ledger_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/select-child",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "select-child"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ledgers",
+      "item": [
+        {
+          "name": "Ledger Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ledgers/{{ledger_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledger_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Child Ledgers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.status && Array.isArray(json.data) && json.data.length > 0) {",
+                  "  pm.collectionVariables.set('ledger_id', json.data[0].id);",
+                  "}",
+                  "pm.test('Children response has status flag', function () {",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{parent_selection_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ledgers/children?parent_id={{parent_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ledgers",
+                "children"
+              ],
+              "query": [
+                {
+                  "key": "parent_id",
+                  "value": "{{parent_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Parties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/parties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "parties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Shifts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/shifts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "shifts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Balance",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/balance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "balance"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Transaction List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json.status && Array.isArray(json.data) && json.data.length > 0) {",
+                  "  pm.collectionVariables.set('transaction_id', json.data[0].id);",
+                  "}",
+                  "pm.test('Transactions response has status flag', function () {",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Transaction Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/transactions/{{transaction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions",
+                "{{transaction_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Transaction",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"party\": {{ledger_id}},\n  \"dateoftrnforapponly\": \"2026-05-24\",\n  \"dateoftrn\": \"24-05-2026\",\n  \"shift\": 11,\n  \"trn_number\": [\"12\", \"13\", \"14\"],\n  \"trn_amount\": [100, 100, 100]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Jantri",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"party\": {{ledger_id}},\n  \"dateoftrnforapponly\": \"2026-05-24\",\n  \"dateoftrn\": \"24-05-2026\",\n  \"shift\": 11,\n  \"gtotal\": 1000,\n  \"a\": [\"1\", \"2\"],\n  \"b\": [\"10\", \"20\"],\n  \"trn_amount\": [500, 500]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jantri",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jantri"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/transactions/{{transaction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions",
+                "{{transaction_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Hisabs",
+      "item": [
+        {
+          "name": "Hisab Dates",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hisabs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hisabs"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

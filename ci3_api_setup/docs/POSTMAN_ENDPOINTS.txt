@@ -1,0 +1,327 @@
+Base URL:
+https://your-domain.com/api/v1
+
+Common Headers:
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+Response Format:
+Success:
+{
+  "status": true,
+  "message": "Data fetched successfully",
+  "data": []
+}
+
+Error:
+{
+  "status": false,
+  "message": "Invalid credentials"
+}
+
+Validation:
+{
+  "status": false,
+  "errors": {
+    "username": "Username required"
+  }
+}
+
+1. Login
+POST /login
+Headers:
+Content-Type: application/json
+Body:
+{
+  "username": "demo",
+  "password": "123456"
+}
+Success Response:
+{
+  "status": true,
+  "message": "Login successful",
+  "data": {
+    "token": "JWT_TOKEN",
+    "parent_selection_required": false,
+    "user": {
+      "id": 10,
+      "name": "Ledger Name",
+      "user_type": "ledger",
+      "updated_by": "1"
+    }
+  }
+}
+Parent Selection Response:
+{
+  "status": true,
+  "message": "Child selection required",
+  "data": {
+    "token": "PARENT_SELECTION_JWT_TOKEN",
+    "parent_selection_required": true,
+    "parent_id": 10,
+    "name": "Parent Ledger"
+  }
+}
+
+2. Select Child Ledger
+POST /auth/select-child
+Headers:
+Authorization: Bearer {{parent_selection_token}}
+Content-Type: application/json
+Body:
+{
+  "child_id": 15
+}
+Success Response:
+{
+  "status": true,
+  "message": "Child selected successfully",
+  "data": {
+    "token": "JWT_TOKEN",
+    "user": {
+      "id": 15,
+      "name": "Child Ledger",
+      "user_type": "ledger",
+      "updated_by": "1"
+    }
+  }
+}
+
+3. Current User
+GET /me
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Session fetched successfully",
+  "data": {
+    "logged_in": true,
+    "user": {
+      "id": 15,
+      "name": "Child Ledger",
+      "user_type": "ledger",
+      "updated_by": "1"
+    }
+  }
+}
+
+4. Logout
+POST /logout
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Logout successful",
+  "data": []
+}
+
+5. Ledger Detail
+GET /ledgers/15
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Ledger fetched successfully",
+  "data": {
+    "id": "15",
+    "ledger_name": "Child Ledger",
+    "username": "demo",
+    "mobile": "9999999999",
+    "parent_id": "10",
+    "updated_by": "1",
+    "status": "1",
+    "agent_id": "2"
+  }
+}
+
+6. Child Ledgers
+GET /ledgers/children?parent_id=10
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Children fetched successfully",
+  "data": [
+    {
+      "id": "15",
+      "ledger_name": "Child Ledger",
+      "parent_id": "10",
+      "updated_by": "1",
+      "status": "1"
+    }
+  ]
+}
+
+7. Parties
+GET /parties
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Parties fetched successfully",
+  "data": [
+    {
+      "id": "15",
+      "name": "Ledger Name"
+    }
+  ]
+}
+
+8. Shifts
+GET /shifts
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Shifts fetched successfully",
+  "data": [
+    {
+      "id": "11",
+      "name": "DS",
+      "app_time": "22:00:00",
+      "open_date": "2026-05-24",
+      "super_admin": "22:30:00",
+      "time_limit_timestamp": 1779640200,
+      "expired": false
+    }
+  ]
+}
+
+9. Balance
+GET /balance
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Balance fetched successfully",
+  "data": {
+    "balance": 1500
+  }
+}
+
+10. Transaction List
+GET /transactions
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Transactions fetched successfully",
+  "data": [
+    {
+      "id": 123,
+      "t_date": "2026-05-24",
+      "display_date": "24 May, 2026",
+      "shift_name": "DS",
+      "ledger_name": "Ledger Name",
+      "total_amount": 500,
+      "can_delete": true,
+      "shift_id": 11
+    }
+  ]
+}
+
+11. Transaction Detail
+GET /transactions/123
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Transaction fetched successfully",
+  "data": {
+    "shift_name": "DS",
+    "t_date": "2026-05-24",
+    "items": [
+      {
+        "number": "12",
+        "amount": 100
+      }
+    ]
+  }
+}
+
+12. Create Transaction
+POST /transactions
+Headers:
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Body:
+{
+  "party": 15,
+  "dateoftrnforapponly": "2026-05-24",
+  "dateoftrn": "24-05-2026",
+  "shift": 11,
+  "trn_number": ["12", "13", "14"],
+  "trn_amount": [100, 100, 100]
+}
+Success Response:
+{
+  "status": true,
+  "message": "Transaction submitted successfully",
+  "data": {
+    "status": 1
+  }
+}
+
+13. Create Jantri
+POST /jantri
+Headers:
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Body:
+{
+  "party": 15,
+  "dateoftrnforapponly": "2026-05-24",
+  "dateoftrn": "24-05-2026",
+  "shift": 11,
+  "gtotal": 1000,
+  "a": ["1", "2"],
+  "b": ["10", "20"],
+  "trn_amount": [500, 500]
+}
+Response:
+{
+  "status": true,
+  "message": "Jantri submitted successfully",
+  "data": {
+    "status": 1
+  }
+}
+
+14. Delete Transaction
+DELETE /transactions/123
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Transaction deleted successfully",
+  "data": {
+    "id": 123
+  }
+}
+
+15. Hisab Dates
+GET /hisabs
+Headers:
+Authorization: Bearer {{token}}
+Response:
+{
+  "status": true,
+  "message": "Hisab dates fetched successfully",
+  "data": [
+    {
+      "date": "24-05-2026",
+      "today_hisab": "-500",
+      "updated_by": "1"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+
+<!-- Mirrored from radixtouch.in/templates/snkthemes/grexsan/source/light/auth-register.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Nov 2020 07:23:58 GMT -->
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>XCH555</title>
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="assets/css/app.min.css">
+  <link rel="stylesheet" href="assets/bundles/jquery-selectric/selectric.css">
+  <!-- Template CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <!-- Custom style CSS -->
+  
+  <link rel='shortcut icon' type='image/x-icon' href='assets/img/favicon.ico' />
+
+
+    <script>
+        function bulkinss() {
+            var bval = document.getElementById('bulkins').value;
+           
+            //someString = 'the cat looks like a cat';
+            //anotherString = someString.replace(/cat/g, 'dog');
+            bval = bval.replace(/A111/g, '1111');
+            bval = bval.replace(/A222/g, '2222');
+            bval = bval.replace(/A333/g, '3333');
+            bval = bval.replace(/A444/g, '4444');
+            bval = bval.replace(/A555/g, '5555');
+            bval = bval.replace(/A666/g, '6666');
+            bval = bval.replace(/A777/g, '7777');
+            bval = bval.replace(/A888/g, '8888');
+            bval = bval.replace(/A999/g, '9999');
+            bval = bval.replace(/A000/g, '0000');
+            const numberList = (bval
+                    .split(
+                        /\-\d+/
+                        ) // - split at "'$' followed by one or more numbers".
+                    .join('') // - join array of split results into string again.
+                    .match(/\d+/g) || []
+                ) // - match any number-sequence or fall back to empty array.
+                .map(str => +str); // - typecast string into number.
+            //.map(str => parseInt(str, 10)); // parse string into integer.
+            var elem = document.getElementById
+            console.log('numberList : ', numberList);
+            //document.getElementById("addtrn").deleteRow(0);
+            var table = document.getElementById("addtrn");
+            var rowCount = table.rows.length;
+
+            table.deleteRow(rowCount -1);
+            var ttotal = 0;
+            for (var i = 0; i < numberList.length; i = i + 2) {
+                var newRow = document.getElementById('addtrn').insertRow();
+                newRow.innerHTML =
+                    '<tr><th><input type="text" class="form-control" name="trn_number[]" value="' +
+                    numberList[i] +
+                    '" placeholder="Number" onkeyup="checkshift()"></th> <th><input type="text" class="form-control" value="' +
+                    numberList[i + 1] +
+                    '" name="trn_amount[]" placeholder="Amount" ></th><td><span class="delete" onClick="$(this).parent().parent().remove();"> X </span></td></tr>';
+                console.log(numberList[i]);
+                //.insertAdjacentHTML('afterend','<tr><th><input type="text" class="form-control" name="trn_number[]" placeholder="Number" onkeyup="checkshift()"></th> <th><input type="text" class="form-control" name="trn_amount[]" placeholder="Amount" ></th></tr>');
+                ttotal = ttotal+ numberList[i + 1];
+            }
+            var oldval =  document.getElementById('ttamntt').value;
+            document.getElementById('ttamntt').value = parseInt(oldval)+parseInt(ttotal);
+            var newRow = document.getElementById('addtrn').insertRow();
+            newRow.innerHTML =
+                '<tr> <th><input type="text" class="form-control" name="trn_number[]" placeholder="Number" onkeyup="checkshift()" autocomplete="off"></th><th><input type="text" class="form-control" name="trn_amount[]" placeholder="Amount" autocomplete="off"></th></tr>';
+            //  document.getElementById('addtrnhead').insertAdjacentHTML('afterend',
+            //    document.getElementById('addtrn').innerHTML);
+            //  var matches = bval.match(/\((.*?)\)/);
+            /*	 var regExp = /^[^-]*[^ -]a/g;
+                                     let regex = /^\d0-\(10\),$/i;
+        console.log( regex.test(bval));
+    var matches = bval.split("-");
+    //console.log(matches);
+    for (var i = 0; i < matches.length; i++) {
+        var str = matches[i];
+       console.log(str.substring(1, str.length - 1));
+    }
+
+                                     var regExp = /\(([^)]+)\)/g;
+    var matches = bval.match(regExp);
+    for (var i = 0; i < matches.length; i++) {
+        var str = matches[i];
+       // console.log(str.substring(1, str.length - 1));
+    } */
+            document.getElementById('bulkins').value = '';
+        }
+    </script>
+
+
+</head>
+
+<body class="background-image-body">
+  <div class="loader"></div>
+  <div id="app">
+      
+
+    <section class="section">
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
+           <div class="card card-auth">
+              <div class="card-header card-header-auth-1">
+              </div>
+              <div class="card-body">
+                <form method="POST">
+                    <table id="addtrn">
+                        <thead>
+                            <tr>
+                                <th><input type="text" class="form-control" name="trn_number[]" maxlength="2" placeholder="Number" onfocus="checkshift(this)"></th>
+                                <th><input type="text" class="form-control" name="trn_amount[]" maxlength="6" placeholder="Amount" onfocus="checkshift(this)"></th>
+
+                            </tr>
+                        </thead>
+                    </table>
+                  <div class="row">
+                    <div class="form-group col-12">
+                     
+                        <textarea name="bulkins" id="bulkins" onkeyup="enablewassap()" class="form-control required " rows="5"></textarea>
+                        
+                    </div>
+                   </div>
+                    <div class="row">
+                       <div class="form-group col-12">
+                           <input type="button" id="bulkinsbtn" name="insert" value="insert" onclick="return bulkinss()" class="btn btn-auth-color btn-lg btn-flex">
+                        </div>
+                     </div>
+                 </form>
+              </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <!-- General JS Scripts -->
+  <script src="assets/js/app.min.js"></script>
+  <!-- JS Libraies -->
+  <script src="assets/bundles/jquery-pwstrength/jquery.pwstrength.min.js"></script>
+  <script src="assets/bundles/jquery-selectric/jquery.selectric.min.js"></script>
+  <!-- Page Specific JS File -->
+  <script src="assets/js/page/auth-register.js"></script>
+  <!-- Template JS File -->
+  <script src="assets/js/scripts.js"></script>
+  
+</body>
+
+
+<!-- Mirrored from radixtouch.in/templates/snkthemes/grexsan/source/light/auth-register.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Nov 2020 07:23:59 GMT -->
+</html>

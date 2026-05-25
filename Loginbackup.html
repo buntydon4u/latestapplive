@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+
+<!-- Mirrored from radixtouch.in/templates/snkthemes/grexsan/source/light/auth-login.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Nov 2020 07:14:10 GMT -->
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>XCH555</title>
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="assets/css/app.min.css">
+  <link rel="stylesheet" href="assets/bundles/bootstrap-social/bootstrap-social.css">
+  <!-- Template CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <!-- Custom style CSS -->
+  
+  <link rel='shortcut icon' type='image/x-icon' href='assets/img/favicon.ico' />
+</head>
+
+<body class="background-image-body">
+
+    
+  <div class="loader"></div>
+  <div id="app">
+    <section class="section">
+      <div class="container mt-5">
+          <div class="row">
+              <div class="col-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3 col-lg-6 offset-lg-3 col-xl-4 offset-xl-4">
+                  <div class="card card-auth">
+                      <div class="card-header login-top">
+                          <h4>Login</h4>
+                      </div>
+					  
+                      <div class="card-body">
+					  <div class="loginwith">
+					  <!--<label>Login as Admin</label> <input onchange="changeform(this)" checked type="radio" name="loginwith" value="1">-->
+					  <label>Login as Party</label> <input onchange="changeform(this)" type="radio" name="loginwith" value="2" checked>
+					  </div>
+                          <!--<form id="loginwithusername" method="POST" action="LoginCode.php">
+                              <div class="form-group">
+                                  <label for="email">Email</label>
+                                  <input id="email" class="form-control" name="email" tabindex="1" required autofocus>
+                                  <div class="invalid-feedback">
+                                      Please fill in your email
+                                  </div>
+                              </div>
+                              <div class="form-group">
+                                  <div class="d-block">
+                                      <label for="password" class="control-label">Password</label>
+                                  </div>
+                                  <input id="password" type="password" class="form-control" name="password" tabindex="2" required>
+                                  <div class="invalid-feedback">
+                                      please fill in your password
+                                  </div>
+                              </div>
+                              <div class="form-group">
+                                  <div class="custom-control custom-checkbox">
+                                      <input type="checkbox" name="remember" class="custom-control-input" tabindex="3" id="remember-me">
+                                      <label class="custom-control-label" for="remember-me">Remember Me</label>
+                                  </div>
+                              </div>
+                              <div class="form-group">
+                                  <!--<a href="Copy-paste.html" class="btn btn-lg btn-block login-btn" tabindex="4">
+                                      Login
+                                  </a>
+                                  <input type="submit" class="btn btn-primary submit" value="submit" name="submit" />
+                              </div>
+                          </form>-->
+						  <form id="loginwithmobile"  method="POST" action="LoginCodewithmobile.php">
+                              <div class="form-group">
+                                  <label for="email">Mobile No</label>
+                                  <input id="mobileno" class="form-control" name="mobileno" tabindex="1" required autofocus>
+                                  <div class="invalid-feedback">
+                                      Please fill in your mobile no
+                                  </div>
+                              </div>
+                              <!--<div class="form-group">
+                                  <div class="d-block">
+                                      <label for="password" class="control-label">Password</label>
+                                  </div>
+                                  <input id="password" type="password" class="form-control" name="password" tabindex="2" required>
+                                  <div class="invalid-feedback">
+                                      please fill in your password
+                                  </div>
+                              </div>-->
+                              <div class="form-group">
+                                  <div class="custom-control custom-checkbox">
+                                      <input type="checkbox" name="remember" class="custom-control-input" tabindex="3" id="remember-me">
+                                      <label class="custom-control-label" for="remember-me">Remember Me</label>
+                                  </div>
+                              </div>
+                              <div class="form-group">
+                                  <!--<a href="Copy-paste.html" class="btn btn-lg btn-block login-btn" tabindex="4">
+                                      Login
+                                  </a>-->
+                                  <input type="submit" class="btn btn-primary submit" value="submit" name="submit" />
+                              </div>
+                          </form>
+                      </div>
+                  </div>
+               </div>
+          </div>
+      </div>
+    </section>
+  </div>
+  <!-- General JS Scripts -->
+  <script src="assets/js/app.min.js"></script>
+  <!-- JS Libraies -->
+  <!-- Page Specific JS File -->
+  <!-- Template JS File -->
+  <script src="assets/js/scripts.js"></script>
+  <script>
+  function changeform(elem){
+  var val = elem.value;
+  if(val == '1'){
+  document.getElementById('loginwithusername').style.display = 'block';
+  document.getElementById('loginwithmobile').style.display = 'none';
+  }
+  else{
+  //loginwithmobile
+  document.getElementById('loginwithusername').style.display = 'none';
+  document.getElementById('loginwithmobile').style.display = 'block';
+  }
+  }
+  </script>
+</body>
+
+
+<!-- Mirrored from radixtouch.in/templates/snkthemes/grexsan/source/light/auth-login.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Nov 2020 07:14:10 GMT -->
+</html>

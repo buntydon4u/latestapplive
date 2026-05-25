@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jantri Filters</title>
+
+    <style>
+        body {
+            background: #f5f5f5;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Centered page with max 1140px width */
+        .page-wrapper {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        /* New Filter Section */
+        .top-filter {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            flex-wrap: nowrap;
+            /* keep ONE row */
+            width: 100%;
+        }
+
+        .top-filter select,
+        .top-filter input {
+            flex: 1;
+            /* allow shrinking */
+            min-width: 0;
+            /* IMPORTANT: prevents overflow */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+
+        /* Number Grid */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 13px;
+        }
+
+        .num-box {
+            background: #fafafa;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .num-box label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .num-box input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #0a66c2;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-size: 16px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .numbers-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .numbers-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .numbers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-wrapper">
+        <div class="container">
+
+            <h2>Jantri Filters</h2>
+
+            <!-- NEW FILTER UI -->
+            <div class="top-filter">
+                <select>
+                    <option>Select Option</option>
+                    <option>Shift 1</option>
+                    <option>Shift 2</option>
+                    <option>Shift 3</option>
+                </select>
+
+                <input type="text" placeholder="Enter text here">
+            </div>
+
+            <h3>Numbers (1 - 99)</h3>
+
+            <div class="numbers-grid">
+                <script>
+                    for (let i = 1; i <= 99; i++) {
+                        document.write(`
+                        <div class="num-box">
+                            <label>${i}</label>
+                            <input type="number" value="0">
+                        </div>
+                    `);
+                    }
+                </script>
+            </div>
+
+            <button class="submit-btn">Submit</button>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

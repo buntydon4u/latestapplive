@@ -1,0 +1,183 @@
+const API_ROOT = 'https://new.555xch.pro/index.php/api/v1';
+
+const TOKEN_KEY = 'ci3_api_token';
+const PARENT_TOKEN_KEY = 'ci3_parent_selection_token';
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
+}
+
+function getParentToken() {
+  return localStorage.getItem(PARENT_TOKEN_KEY) || '';
+}
+
+function setToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
+function setParentToken(token) {
+  if (token) localStorage.setItem(PARENT_TOKEN_KEY, token);
+  else localStorage.removeItem(PARENT_TOKEN_KEY);
+}
+
+function clearTokens() {
+  setToken('');
+  setParentToken('');
+}
+
+function buildUrl(path, params) {
+  const base = API_ROOT.startsWith('http')
+    ? API_ROOT
+    : `${window.location.origin}${API_ROOT.startsWith('/') ? '' : '/'}${API_ROOT}`;
+  const url = new URL(`${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        url.searchParams.set(key, value);
+      }
+    });
+  }
+
+  return url;
+}
+
+function normalizeResponse(json, fallbackStatus) {
+  const ok = json?.status === true || json?.success === true || json?.logged_in === true;
+  const data = json?.data;
+  const dataObject = data && !Array.isArray(data) && typeof data === 'object' ? data : {};
+
+  return {
+    ...dataObject,
+    data,
+    success: ok,
+    status: json?.status ?? ok,
+    message: json?.message || '',
+    error: json?.message || json?.error || (fallbackStatus >= 400 ? `Request failed: ${fallbackStatus}` : ''),
+    errors: json?.errors || null,
+    logged_in: dataObject.logged_in ?? json?.logged_in ?? false,
+    parent_selection_required: dataObject.parent_selection_required ?? json?.parent_selection_required ?? false
+  };
+}
+
+async function request(path, options = {}) {
+  const url = buildUrl(path, options.params);
+  const token = options.parentAuth ? getParentToken() : getToken();
+
+  const init = {
+    method: options.method || 'GET',
+    headers: {
+      Accept: 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (options.body) {
+    init.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(url.toString(), init);
+  const text = await response.text();
+  let json = {};
+
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(text || `Request failed: ${response.status}`);
+  }
+
+  return normalizeResponse(json, response.status);
+}
+
+export const api = {
+  login: async (username, password) => {
+    clearTokens();
+    const result = await request('login', { method: 'POST', body: { username, password } });
+
+    if (result.success && result.token) {
+      if (result.parent_selection_required) {
+        setParentToken(result.token);
+      } else {
+        setToken(result.token);
+      }
+    }
+
+    return result;
+  },
+
+  selectChild: async (child_id) => {
+    const result = await request('auth/select-child', {
+      method: 'POST',
+      parentAuth: true,
+      body: { child_id }
+    });
+
+    if (result.success && result.token) {
+      setToken(result.token);
+      setParentToken('');
+    }
+
+    return result;
+  },
+
+  session: async () => {
+    if (!getToken() && !getParentToken()) {
+      return { success: false, logged_in: false };
+    }
+
+    if (getToken()) {
+      return request('me');
+    }
+
+    return request('me', { parentAuth: true });
+  },
+
+  logout: async () => {
+    const result = getToken()
+      ? await request('logout', { method: 'POST' })
+      : { success: true };
+    clearTokens();
+    return result;
+  },
+
+  children: async (parent_id) => {
+    const result = await request('ledgers/children', {
+      parentAuth: !getToken(),
+      params: { parent_id }
+    });
+    return { ...result, children: Array.isArray(result.data) ? result.data : [] };
+  },
+
+  balance: () => request('balance'),
+  parties: async () => {
+    const result = await request('parties');
+    return { ...result, parties: Array.isArray(result.data) ? result.data : [] };
+  },
+  shifts: async () => {
+    const result = await request('shifts');
+    return { ...result, shifts: Array.isArray(result.data) ? result.data : [] };
+  },
+  transactions: async () => {
+    const result = await request('transactions');
+    return { ...result, transactions: Array.isArray(result.data) ? result.data : [] };
+  },
+  transactionDetails: (id) => request(`transactions/${id}`),
+  hisabs: async () => {
+    const result = await request('hisabs');
+    return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
+  },
+  submitTransaction: (body) => request('transactions', { method: 'POST', body }),
+  submitJantri: (body) => request('jantri', { method: 'POST', body }),
+  deleteTransaction: (id) => request(`transactions/${id}`, { method: 'DELETE' })
+};
+
+export function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function todayDisplay() {
+  const now = new Date();
+  return `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+}
