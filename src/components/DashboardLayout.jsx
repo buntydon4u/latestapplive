@@ -88,7 +88,9 @@ function AuthHeader({ activePage, onNavigate, onMenu }) {
 
   return (
     <header className="auth-header">
-      <button className="header-icon" onClick={onMenu} type="button" aria-label="Open menu">Menu</button>
+      <button className="header-icon" onClick={onMenu} type="button" aria-label="Open menu">
+        <span aria-hidden="true">☰</span>
+      </button>
       <BrandLogo initials={initials} />
       <div className="header-wallet">
         <button className="wallet-pill" onClick={() => onNavigate('wallet')} type="button">
