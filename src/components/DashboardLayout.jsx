@@ -1,128 +1,167 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const navItems = [
+const bottomNavItems = [
   { id: 'home', label: 'Home', icon: 'H' },
-  { id: 'entry', label: 'Entry', icon: 'E' },
-  { id: 'fromto', label: 'From To', icon: 'F' },
-  { id: 'cross', label: 'Cross', icon: 'C' },
-  { id: 'jantri', label: 'Jantri', icon: 'J' },
-  { id: 'results', label: 'View Transaction', icon: 'V' },
-  { id: 'hisab', label: 'Hisab', icon: 'B' },
-  { id: 'statement', label: 'Statement', icon: 'S' },
-  { id: 'logout', label: 'Logout', icon: 'L' }
+  { id: 'wallet', label: 'Wallet', icon: 'W' },
+  { id: 'history', label: 'Game History', icon: 'G' },
+  { id: 'chart', label: 'Chart', icon: 'C' }
 ];
 
-const primaryNavItems = navItems.slice(0, 5);
-const secondaryNavItems = navItems.slice(5);
+const drawerItems = [
+  { id: 'entry', label: 'Num Akhar Entry' },
+  { id: 'fromto', label: 'From-To Entry' },
+  { id: 'cross', label: 'Cross Entry' },
+  { id: 'jantri', label: 'Jantri Entry' },
+  { id: 'hisab', label: 'Hisab Report' },
+  { id: 'statement', label: 'Statement' }
+];
 
-function formatMoney(value) {
-  if (value === null || value === undefined) return '--';
-  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value);
+export function formatMoney(value) {
+  if (value === null || value === undefined || value === '') return '0';
+  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(Number(value || 0));
 }
 
-function ShiftTimer() {
-  const [remaining, setRemaining] = useState('Select shift');
+function BrandLogo({ initials }) {
+  return (
+    <div className="auth-logo" aria-label="App logo">
+      <span>{initials}</span>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    let interval;
-    const handler = (event) => {
-      window.clearInterval(interval);
-      const deadline = Number(event.detail?.deadline || 0) * 1000;
-      if (!deadline) {
-        setRemaining('Select shift');
-        return;
-      }
+export function StatusBadge({ open, label }) {
+  return (
+    <span className={`premium-status ${open ? 'is-open' : 'is-closed'}`}>
+      {label || (open ? 'Betting Open' : 'Betting Closed')}
+    </span>
+  );
+}
 
-      const tick = () => {
-        const diff = deadline - Date.now();
-        if (diff <= 0) {
-          setRemaining('Expired');
-          return;
-        }
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setRemaining(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
-      };
+export function EmptyState({ title = 'No records found.', detail }) {
+  return (
+    <div className="premium-empty">
+      <b>{title}</b>
+      {detail ? <span>{detail}</span> : null}
+    </div>
+  );
+}
 
-      tick();
-      interval = window.setInterval(tick, 1000);
-    };
+export function LoadingState({ label = 'Loading...' }) {
+  return (
+    <div className="premium-empty">
+      <span className="loader" />
+      <b>{label}</b>
+    </div>
+  );
+}
 
-    window.addEventListener('shift-change', handler);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('shift-change', handler);
-    };
-  }, []);
+export function BalanceCard({ balance, rate = 10 }) {
+  return (
+    <section className="premium-balance-card">
+      <span>GAME RATE {rate}</span>
+      <div>
+        <small>RS</small>
+        <b>{formatMoney(balance)} Balance</b>
+      </div>
+    </section>
+  );
+}
 
-  return <span className={remaining === 'Expired' ? 'timer expired' : 'timer'}>{remaining}</span>;
+export function PremiumButton({ children, className = '', onClick, disabled, title }) {
+  return (
+    <button
+      className={`premium-pressable ${className}`}
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function AuthHeader({ activePage, onNavigate, onMenu }) {
+  const { user, balance } = useAuth();
+  const initials = useMemo(() => (user?.name || user?.username || '555').slice(0, 2).toUpperCase(), [user]);
+
+  return (
+    <header className="auth-header">
+      <button className="header-icon" onClick={onMenu} type="button" aria-label="Open menu">Menu</button>
+      <BrandLogo initials={initials} />
+      <div className="header-wallet">
+        <button className="wallet-pill" onClick={() => onNavigate('wallet')} type="button">
+          <span>W</span>
+          <b>{formatMoney(balance)}</b>
+        </button>
+        <button className="add-money-link" onClick={() => onNavigate('wallet')} type="button">Add Money</button>
+        <button className="header-icon notification" type="button" aria-label="Notifications">
+          !
+          <small>1</small>
+        </button>
+      </div>
+      <span className="screen-reader-only">{activePage}</span>
+    </header>
+  );
+}
+
+function BottomTabNavigation({ activePage, onNavigate }) {
+  return (
+    <nav className="auth-bottom-nav" aria-label="Authenticated navigation">
+      {bottomNavItems.map((item) => (
+        <button
+          className={`bottom-nav-item ${activePage === item.id ? 'active' : ''}`}
+          key={item.id}
+          onClick={() => onNavigate(item.id)}
+          type="button"
+        >
+          <span>{item.icon}</span>
+          <b>{item.label}</b>
+        </button>
+      ))}
+    </nav>
+  );
 }
 
 export default function DashboardLayout({ children, activePage, onNavigate }) {
-  const { user, balance, refreshBalance, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-  const initials = useMemo(() => (user?.name || 'U').slice(0, 2).toUpperCase(), [user]);
+  const { user, logout } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  function navigate(page) {
+    setDrawerOpen(false);
+    onNavigate(page);
+  }
 
   return (
-    <div className={`app-shell ${collapsed ? 'is-collapsed' : ''}`}>
-      <aside className="sidebar">
-        <button className="icon-button sidebar-toggle" onClick={() => setCollapsed((value) => !value)} title="Toggle sidebar">
-          {collapsed ? '>' : '<'}
-        </button>
-        <nav className="nav-list primary-nav">
-          {primaryNavItems.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => onNavigate(item.id)}
-              title={item.label}
-            >
-              <span>{item.icon}</span>
-              <strong>{item.label}</strong>
-            </button>
-          ))}
-        </nav>
-        <nav className="nav-list secondary-nav">
-          {secondaryNavItems.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => item.id === 'logout' ? logout() : onNavigate(item.id)}
-              title={item.label}
-            >
-              <span>{item.icon}</span>
-              <strong>{item.label}</strong>
-            </button>
-          ))}
-        </nav>
-      </aside>
+    <div className="premium-shell">
+      <AuthHeader activePage={activePage} onNavigate={navigate} onMenu={() => setDrawerOpen(true)} />
 
-      <div className="workspace">
-        <header className="topbar">
-          <div className="user-chip">
-            <span className="avatar">{initials}</span>
-            <span>
-              <b>{user?.name}</b>
-              <small>Ledger login</small>
-            </span>
-          </div>
-          <div className="topbar-actions">
-            <div className="metric">
-              <small>Shift</small>
-              <ShiftTimer />
+      {drawerOpen ? (
+        <div className="drawer-backdrop premium-drawer-backdrop" onClick={() => setDrawerOpen(false)}>
+          <aside className="premium-menu-drawer" onClick={(event) => event.stopPropagation()}>
+            <div className="premium-drawer-head">
+              <BrandLogo initials={(user?.name || '55').slice(0, 2).toUpperCase()} />
+              <div>
+                <b>{user?.name || 'User'}</b>
+                <span>Authenticated</span>
+              </div>
+              <button className="header-icon" onClick={() => setDrawerOpen(false)} type="button">X</button>
             </div>
-            <div className="metric">
-              <small>Coins</small>
-              <b>{formatMoney(balance)}</b>
+            <div className="premium-drawer-list">
+              {drawerItems.map((item) => (
+                <button key={item.id} onClick={() => navigate(item.id)} type="button">
+                  {item.label}
+                </button>
+              ))}
+              <button className="danger-drawer-action" onClick={logout} type="button">Logout</button>
             </div>
-            <button className="icon-button" onClick={refreshBalance} title="Reload balance">R</button>
-            <button className="ghost-button" onClick={logout}>Logout</button>
-          </div>
-        </header>
-        <main>{children}</main>
-        <footer>React migration shell connected to root API router</footer>
-      </div>
+          </aside>
+        </div>
+      ) : null}
+
+      <main className="premium-main">{children}</main>
+      <BottomTabNavigation activePage={activePage} onNavigate={navigate} />
     </div>
   );
 }

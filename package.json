@@ -6,12 +6,23 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "mobile:bundle": "npm run build && node scripts/create-mobile-webview-html.cjs",
+    "mobile:start": "expo start",
+    "mobile:build:apk": "npm run mobile:bundle && eas build -p android --profile production-apk-arm64",
+    "mobile:build:aab": "npm run mobile:bundle && eas build -p android --profile production"
   },
   "dependencies": {
+    "expo": "^56.0.4",
+    "expo-build-properties": "~56.0.14",
+    "react": "19.2.3",
+    "react-native": "^0.85.3",
+    "react-native-web": "^0.21.2",
+    "react-native-webview": "^13.16.1"
+  },
+  "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react-dom": "19.2.3",
     "vite": "^7.0.0"
   }
 }

@@ -1,12 +1,41 @@
 {
   "expo": {
+    "name": "XCH555",
+    "slug": "xch555-react-root",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "xch555",
+    "jsEngine": "hermes",
+    "assetBundlePatterns": [],
     "extra": {
       "eas": {
         "projectId": "b67846d2-452a-4dc7-9942-a04b6455a1a5"
       }
     },
     "android": {
-      "package": "com.jsmithjj.xch555reactroot"
-    }
+      "package": "com.jsmithjj.xch555reactroot",
+      "jsEngine": "hermes",
+      "usesCleartextTraffic": false
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildArchs": [
+              "arm64-v8a"
+            ],
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enablePngCrunchInReleaseBuilds": true,
+            "enableBundleCompression": true,
+            "networkInspector": false,
+            "useLegacyPackaging": false
+          }
+        }
+      ],
+      "./plugins/with-android-abi-splits.cjs"
+    ]
   }
 }

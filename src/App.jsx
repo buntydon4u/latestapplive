@@ -7,16 +7,29 @@ import DataEntry from './pages/DataEntry.jsx';
 import ViewResults from './pages/ViewResults.jsx';
 import Reports from './pages/Reports.jsx';
 import Home from './pages/Home.jsx';
+import Wallet from './pages/Wallet.jsx';
+import GameHistory from './pages/GameHistory.jsx';
+import ChartResults from './pages/ChartResults.jsx';
 
 function AppRoutes() {
   const { user, parentSelection, loading } = useAuth();
   const [activePage, setActivePage] = useState('home');
+  const [selectedShiftId, setSelectedShiftId] = useState('');
+
+  function navigateToEntry(shiftId, mode = 'entry') {
+    setSelectedShiftId(shiftId ? String(shiftId) : '');
+    setActivePage(mode);
+  }
+
   const pages = {
-    home: () => <Home onNavigate={setActivePage} />,
-    entry: () => <DataEntry initialMode="Num-Akhar" />,
-    fromto: () => <DataEntry initialMode="From-To" />,
-    cross: () => <DataEntry initialMode="Cross" />,
-    jantri: () => <DataEntry initialMode="Jantri" />,
+    home: () => <Home onNavigate={setActivePage} onPlayShift={navigateToEntry} />,
+    wallet: Wallet,
+    history: GameHistory,
+    chart: ChartResults,
+    entry: () => <DataEntry initialMode="Num-Akhar" initialShift={selectedShiftId} />,
+    fromto: () => <DataEntry initialMode="From-To" initialShift={selectedShiftId} />,
+    cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
+    jantri: () => <DataEntry initialMode="Jantri" initialShift={selectedShiftId} />,
     results: ViewResults,
     hisab: () => <Reports initialView="hisab" />,
     statement: () => <Reports initialView="statement" />
@@ -24,7 +37,10 @@ function AppRoutes() {
   const Page = pages[activePage] || pages.home;
 
   useEffect(() => {
-    if (!user) setActivePage('home');
+    if (!user) {
+      setActivePage('home');
+      setSelectedShiftId('');
+    }
   }, [user]);
 
   if (loading) {

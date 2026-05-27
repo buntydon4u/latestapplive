@@ -150,6 +150,7 @@ export const api = {
     return { ...result, children: Array.isArray(result.data) ? result.data : [] };
   },
 
+  ledger: (id) => request(`ledgers/${id}`),
   balance: () => request('balance'),
   parties: async () => {
     const result = await request('parties');

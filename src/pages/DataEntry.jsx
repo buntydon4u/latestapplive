@@ -121,7 +121,7 @@ function JantriGrid({ grid, setGrid }) {
   );
 }
 
-export default function DataEntry({ initialMode = tabs[0] }) {
+export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) {
   const { refreshBalance } = useAuth();
   const [active, setActive] = useState(initialMode);
   const [parties, setParties] = useState([]);
@@ -144,6 +144,12 @@ export default function DataEntry({ initialMode = tabs[0] }) {
   useEffect(() => {
     setActive(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    if (initialShift) {
+      setMeta((current) => ({ ...current, shift: String(initialShift) }));
+    }
+  }, [initialShift]);
 
   useEffect(() => {
     const selected = shifts.find((shift) => String(shift.id) === String(meta.shift));
