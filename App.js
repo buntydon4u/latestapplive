@@ -1,8 +1,17 @@
 import { ActivityIndicator, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MOBILE_WEBVIEW_HTML } from './mobile-webview-html';
+import WebPhoneFrame from './components/WebPhoneFrame';
 
 export default function App() {
+  return (
+    <WebPhoneFrame>
+      <MainApp />
+    </WebPhoneFrame>
+  );
+}
+
+function MainApp() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

@@ -10,6 +10,7 @@ import Home from './pages/Home.jsx';
 import Wallet from './pages/Wallet.jsx';
 import GameHistory from './pages/GameHistory.jsx';
 import ChartResults from './pages/ChartResults.jsx';
+import WebPhoneFrame from './components/WebPhoneFrame.jsx';
 
 function AppRoutes() {
   const { user, parentSelection, loading } = useAuth();
@@ -70,8 +71,10 @@ export default function App() {
   }, [prefersDark]);
 
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <WebPhoneFrame>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </WebPhoneFrame>
   );
 }
