@@ -9,7 +9,7 @@ const bottomNavItems = [
 ];
 
 const drawerItems = [
-  { id: 'entry', label: 'Num Akhar Entry' },
+  { id: 'entry', label: 'Entry' },
   { id: 'fromto', label: 'From-To Entry' },
   { id: 'cross', label: 'Cross Entry' },
   { id: 'jantri', label: 'Jantri Entry' },

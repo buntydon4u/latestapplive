@@ -95,6 +95,51 @@ function get_db_connection() {
     return $conn;
 }
 
+function resolve_shift_id($conn, $submitted_shift, $updated_by) {
+    $submitted_shift = (int)$submitted_shift;
+    if (!$submitted_shift || !$updated_by) {
+        return $submitted_shift;
+    }
+
+    date_default_timezone_set('Asia/Kolkata');
+    $fromdate = date('Y-m-d');
+    $todate = date('Y-m-d', time() + (12 * 60 * 60));
+    $stmt = $conn->prepare("
+        SELECT id, shift_id, app_time, open_date
+        FROM user_shift_timings
+        WHERE updated_by = ?
+          AND open_date >= ?
+          AND open_date <= ?
+          AND (id = ? OR shift_id = ?)
+        ORDER BY open_date ASC, master ASC
+    ");
+    $stmt->bind_param("sssii", $updated_by, $fromdate, $todate, $submitted_shift, $submitted_shift);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    $rows = [];
+    while ($row = $res->fetch_assoc()) {
+        $rows[] = $row;
+    }
+
+    $now = time();
+    foreach ($rows as $row) {
+        $limit = strtotime(date('d-m-Y', strtotime($row['open_date'])) . ' ' . date('H:i', strtotime($row['app_time'])));
+        if ($now < $limit && (int)$row['id'] === $submitted_shift) {
+            return (int)$row['id'];
+        }
+    }
+
+    foreach ($rows as $row) {
+        $limit = strtotime(date('d-m-Y', strtotime($row['open_date'])) . ' ' . date('H:i', strtotime($row['app_time'])));
+        if ($now < $limit && (int)$row['shift_id'] === $submitted_shift) {
+            return (int)$row['id'];
+        }
+    }
+
+    return $submitted_shift;
+}
+
 switch ($action) {
     case 'login':
         $user_name = isset($_POST['username']) ? trim($_POST['username']) : '';
@@ -348,7 +393,7 @@ switch ($action) {
 
         $conn = get_db_connection();
         $stmt = $conn->prepare("
-            SELECT tbl_shift.id AS tbl_shift_id, tbl_shift.shift_name, user_shift_timings.app_time, user_shift_timings.open_date, tbl_shift.super_admin 
+            SELECT user_shift_timings.id AS id, tbl_shift.id AS tbl_shift_id, tbl_shift.shift_name, user_shift_timings.app_time, user_shift_timings.open_date, tbl_shift.super_admin 
             FROM user_shift_timings 
             LEFT JOIN tbl_shift ON user_shift_timings.shift_id = tbl_shift.id 
             WHERE user_shift_timings.updated_by = ? 
@@ -366,7 +411,8 @@ switch ($action) {
             $time = strtotime(date('d-m-Y', strtotime($row['open_date'])) . ' ' . date("H:i", strtotime($row['app_time'])));
             $expired = ($ttime >= $time);
             $shifts[] = [
-                'id' => $row['tbl_shift_id'],
+                'id' => $row['id'],
+                'tbl_shift_id' => $row['tbl_shift_id'],
                 'name' => $row['shift_name'],
                 'app_time' => $row['app_time'],
                 'open_date' => $row['open_date'],
@@ -541,7 +587,10 @@ switch ($action) {
         }
 
         // We will proxy the POST request to the live backend using cURL
-        $url = "https://new.555xch.pro/tbl_transactions/add_transaction_final_app";
+        $url = "https://new.555xch.pro/tbl_transactions/add_transaction_final_app_api";
+        $conn = get_db_connection();
+        $shift_id = resolve_shift_id($conn, $_POST['shift'], $_SESSION['updated_by']);
+        $conn->close();
         
         // Prepare POST fields
         $fields = [
@@ -551,7 +600,7 @@ switch ($action) {
             'userid' => $_SESSION['login'],
             'entryval' => 'Entry-page.php?login=' . $_SESSION['login'] . '&user_type=ledger',
             'updated_by' => $_SESSION['updated_by'],
-            'shift' => $_POST['shift'],
+            'shift' => $shift_id,
             'submitpost' => 'submit'
         ];
 
@@ -596,6 +645,9 @@ switch ($action) {
         }
 
         $url = "https://new.555xch.pro/tbl_jantri/add_jantri_form_app";
+        $conn = get_db_connection();
+        $shift_id = resolve_shift_id($conn, $_POST['shift'], $_SESSION['updated_by']);
+        $conn->close();
 
         $fields = [
             'party' => $_POST['party'],
@@ -604,7 +656,7 @@ switch ($action) {
             'userid' => $_SESSION['login'],
             'entryval' => 'Entry-page.php?login=' . $_SESSION['login'] . '&user_type=ledger',
             'updated_by' => $_SESSION['updated_by'],
-            'shift' => $_POST['shift'],
+            'shift' => $shift_id,
             'ttamntt' => '0',
             'gtotal' => $_POST['gtotal'],
             'submitpost' => 'submit'

@@ -27,7 +27,7 @@ function AppRoutes() {
     wallet: Wallet,
     history: GameHistory,
     chart: ChartResults,
-    entry: () => <DataEntry initialMode="Num-Akhar" initialShift={selectedShiftId} />,
+    entry: () => <DataEntry initialMode="Entry" initialShift={selectedShiftId} />,
     fromto: () => <DataEntry initialMode="From-To" initialShift={selectedShiftId} />,
     cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
     jantri: () => <DataEntry initialMode="Jantri" initialShift={selectedShiftId} />,

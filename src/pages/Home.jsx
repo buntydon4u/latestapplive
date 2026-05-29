@@ -37,6 +37,7 @@ function normalizeMarket(shift) {
 
   return {
     id: shift.id || shift.shift_id || shift.name,
+    masterShiftId: shift.tbl_shift_id || shift.shift_id || shift.id || shift.name,
     name: shift.name || shift.shift_name || shift.market_name || 'Market',
     closeTime,
     resultTime,
@@ -206,7 +207,7 @@ export default function Home({ onNavigate, onPlayShift }) {
               <GameMarketCard
                 key={market.id}
                 market={market}
-                transaction={transactionByShift.get(String(market.id))}
+                transaction={transactionByShift.get(String(market.masterShiftId))}
                 onPlay={() => onPlayShift ? onPlayShift(market.id) : onNavigate('entry')}
               />
             ))}

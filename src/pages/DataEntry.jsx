@@ -2,55 +2,145 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api, todayDisplay, todayIso } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const tabs = ['Num-Akhar', 'From-To', 'Cross', 'Jantri'];
+const tabs = ['Entry', 'Num-Akhar', 'From-To', 'Cross', 'Jantri'];
+const akharTokenPattern = String.raw`(?:\d{1,4}|[AB]\d|\d[AB])`;
+const akharSeparatorPattern = String.raw`(?:[\s,!@#$%^&_\-/|.]+)`;
+const akharConnectorPattern = String.raw`(?:\*|\(|=|x|X|\u00d7|\bINTO\b|\bINTU\b|\bIN\b)`;
+const akharExpressionPattern = new RegExp(
+  `${akharTokenPattern}(?:${akharSeparatorPattern}${akharTokenPattern})*\\s*${akharConnectorPattern}\\s*\\d+\\s*\\)?`,
+  'gi'
+);
 
 function normalizeNumber(value) {
   return String(value || '').replace(/\D/g, '').slice(-2).padStart(2, '0');
 }
 
+function cleanWhatsAppText(rawText) {
+  return String(rawText || '')
+    .split('\n')
+    .map((line) => line
+      .replace(/^\[\d{1,2}:\d{2}\s*(am|pm),\s*\d{1,2}\/\d{1,2}\/\d{4}\]\s*.*?:\s*/i, '')
+      .replace(/>{2,}/g, '')
+      .replace(/[\/.]/g, ',')
+      .replace(/\*{2,}/g, '*')
+      .trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+function normalizeAkharText(rawText) {
+  return cleanWhatsAppText(rawText)
+    .toUpperCase()
+    .replace(/\b(INTO|INTU|IN)\b/g, '*')
+    .replace(/[=X\u00d7(]/g, '*')
+    .replace(/\)/g, '')
+    .replace(/[!@#$%^&_\-/|. \t\r]+/g, ',')
+    .replace(/,+/g, ',')
+    .replace(/,\*/g, '*')
+    .replace(/\*,/g, '*')
+    .replace(/^,|,$/gm, '');
+}
+
+function normalizeAkharNumber(token) {
+  const value = String(token || '').trim().toUpperCase();
+  if (!value) return { error: 'Number is missing.' };
+  if (value === '100') return { number: '00' };
+
+  if (/^[AB]\d$|^\d[AB]$/.test(value)) {
+    const digit = value.replace(/[AB]/g, '');
+    return { number: digit.repeat(value.includes('A') ? 4 : 3) };
+  }
+
+  if (!/^\d+$/.test(value)) {
+    return { error: `${value} is not a valid number.` };
+  }
+
+  if (value.length > 2 && !value.split('').every((digit) => digit === value[0])) {
+    return { error: `${value} is not a valid number.` };
+  }
+
+  return { number: value.length <= 2 ? normalizeNumber(value) : value };
+}
+
 function uniqueRows(rows) {
-  const seen = new Set();
-  return rows.filter((row) => {
-    const key = `${row.number}-${row.amount}`;
-    if (seen.has(key) || !row.number || !row.amount) return false;
-    seen.add(key);
-    return true;
-  });
+  return rows.filter((row) => row.number && row.amount);
+}
+
+function parseAkharExpression(expression) {
+  const normalized = normalizeAkharText(expression);
+  const parts = normalized.split('*');
+  if (parts.length === 1) return { rows: [], errors: [`Amount not found for ${expression.trim()}.`] };
+  if (parts.length > 2) return { rows: [], errors: [`Multiple amounts found for ${parts[0]}.`] };
+
+  const amount = Number(String(parts[1] || '').replace(/\D/g, ''));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { rows: [], errors: [`Amount not found for ${parts[0]}.`] };
+  }
+
+  const rows = [];
+  const errors = [];
+  const tokens = String(parts[0] || '').split(',').map((token) => token.trim()).filter(Boolean);
+
+  for (const token of tokens) {
+    const result = normalizeAkharNumber(token);
+    if (result.error) {
+      errors.push(result.error);
+    } else {
+      rows.push({ number: result.number, amount });
+    }
+  }
+
+  return { rows, errors };
 }
 
 function parseNumAkhar(text) {
-  const tokens = text.replace(/[,\n\r]+/g, ' ').split(/\s+/).filter(Boolean);
+  const cleanedText = cleanWhatsAppText(text);
   const rows = [];
+  const errors = [];
 
-  for (let index = 0; index < tokens.length; index += 2) {
-    const number = normalizeNumber(tokens[index]);
-    const amount = Number(String(tokens[index + 1] || '').replace(/\D/g, ''));
-    if (number && amount > 0) rows.push({ number, amount });
+  for (const line of cleanedText.split('\n')) {
+    const expressions = [...line.matchAll(akharExpressionPattern)];
+    if (!expressions.length) {
+      if (line.trim()) errors.push(`Invalid pattern: ${line.trim()}`);
+      continue;
+    }
+
+    let unmatched = line;
+    for (const match of expressions) {
+      unmatched = unmatched.replace(match[0], '');
+      const result = parseAkharExpression(match[0]);
+      rows.push(...result.rows);
+      errors.push(...result.errors);
+    }
+
+    if (unmatched.replace(/[\s,;]+/g, '').trim()) {
+      errors.push(`Invalid pattern: ${line.trim()}`);
+    }
   }
-  return uniqueRows(rows);
+
+  return { rows: uniqueRows(rows), cleanedText: normalizeAkharText(cleanedText), errors: [...new Set(errors)] };
 }
 
 function buildRange(from, to, amount) {
   const start = Number(from);
-  const end = Number(to);
+  const end = String(to) === '00' ? 100 : Number(to);
   const amt = Number(amount);
   if (!Number.isFinite(start) || !Number.isFinite(end) || amt <= 0) return [];
-  const min = Math.min(start, end);
-  const max = Math.max(start, end);
-  return Array.from({ length: max - min + 1 }, (_, offset) => ({
-    number: normalizeNumber(min + offset),
+  if (start > end) return [];
+  return Array.from({ length: end - start + 1 }, (_, offset) => ({
+    number: normalizeNumber(start + offset),
     amount: amt
   }));
 }
 
-function buildCross(left, right, amount) {
+function buildCross(left, right, amount, joda = 'Yes') {
   const amt = Number(amount);
   if (!left || !right || amt <= 0) return [];
   const rows = [];
   for (const first of left.replace(/\D/g, '')) {
     for (const second of right.replace(/\D/g, '')) {
+      if (joda === 'No' && first === second) continue;
       rows.push({ number: `${first}${second}`, amount: amt });
-      rows.push({ number: `${second}${first}`, amount: amt });
     }
   }
   return uniqueRows(rows);
@@ -68,12 +158,106 @@ function EntryRows({ rows, setRows }) {
       <div className="entry-table">
         {rows.map((row, index) => (
           <div className="entry-row" key={`${row.number}-${index}`}>
-            <input value={row.number} maxLength="2" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, number: normalizeNumber(event.target.value) } : item))} />
+            <input value={row.number} maxLength="4" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, number: event.target.value.replace(/\D/g, '').slice(0, 4) } : item))} />
             <input value={row.amount} inputMode="numeric" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, amount: event.target.value.replace(/\D/g, '') } : item))} />
-            <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>×</button>
+            <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
           </div>
         ))}
         {!rows.length ? <p className="empty-state">No entries prepared.</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
+  const numberRef = useRef(null);
+  const amountRef = useRef(null);
+  const rowAmountRefs = useRef([]);
+  const total = rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+
+  function updateRow(index, field, value) {
+    setRows((current) => current.map((row, rowIndex) => (
+      rowIndex === index ? { ...row, [field]: value } : row
+    )));
+  }
+
+  function updateRowNumber(index, value) {
+    const number = value.replace(/\D/g, '').slice(0, 2);
+    updateRow(index, 'number', number);
+    if (number.length === 2) rowAmountRefs.current[index]?.focus();
+  }
+
+  function updateDraftNumber(value) {
+    const number = value.replace(/\D/g, '').slice(0, 2);
+    setDraft((current) => ({ ...current, number }));
+    if (number.length === 2) amountRef.current?.focus();
+  }
+
+  function addDraftRow() {
+    const number = draft.number.replace(/\D/g, '').slice(0, 2);
+    const amount = draft.amount.replace(/\D/g, '');
+
+    if (!number || !amount) {
+      setNotice('Enter number and amount before adding.');
+      return;
+    }
+
+    setRows((current) => [...current, { number: normalizeNumber(number), amount }]);
+    setDraft({ number: '', amount: '' });
+    setNotice('');
+    window.setTimeout(() => numberRef.current?.focus(), 0);
+  }
+
+  return (
+    <section className="panel table-panel">
+      <div className="panel-title">
+        <h3>Entry</h3>
+        <b>{rows.length} / {total}</b>
+      </div>
+      <div className="entry-table manual-entry-table">
+        {rows.map((row, index) => (
+          <div className="entry-row" key={`${row.number}-${index}`}>
+            <input
+              value={row.number}
+              maxLength="2"
+              inputMode="numeric"
+              placeholder="Number"
+              onChange={(event) => updateRowNumber(index, event.target.value)}
+            />
+            <input
+              ref={(node) => { rowAmountRefs.current[index] = node; }}
+              value={row.amount}
+              inputMode="numeric"
+              placeholder="Amount"
+              onChange={(event) => updateRow(index, 'amount', event.target.value.replace(/\D/g, ''))}
+            />
+            <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
+          </div>
+        ))}
+        <div className="entry-row">
+          <input
+            ref={numberRef}
+            value={draft.number}
+            maxLength="2"
+            inputMode="numeric"
+            placeholder="Number"
+            onChange={(event) => updateDraftNumber(event.target.value)}
+          />
+          <input
+            ref={amountRef}
+            value={draft.amount}
+            inputMode="numeric"
+            placeholder="Amount"
+            onChange={(event) => setDraft((current) => ({ ...current, amount: event.target.value.replace(/\D/g, '') }))}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addDraftRow();
+              }
+            }}
+          />
+          <button className="icon-button" title="Add row" onClick={addDraftRow}>+</button>
+        </div>
       </div>
     </section>
   );
@@ -128,8 +312,9 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
   const [meta, setMeta] = useState({ shift: '' });
   const [text, setText] = useState('');
   const [range, setRange] = useState({ from: '', to: '', amount: '' });
-  const [cross, setCross] = useState({ left: '', right: '', amount: '' });
+  const [cross, setCross] = useState({ left: '', right: '', amount: '', joda: 'Yes' });
   const [rows, setRows] = useState([]);
+  const [manualDraft, setManualDraft] = useState({ number: '', amount: '' });
   const [grid, setGrid] = useState({});
   const [notice, setNotice] = useState('');
   const ledgerId = user?.id;
@@ -164,6 +349,26 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     setRows((current) => uniqueRows([...current, ...newRows]));
   }
 
+  function getManualDraftRow() {
+    const number = manualDraft.number.replace(/\D/g, '').slice(0, 2);
+    const amount = manualDraft.amount.replace(/\D/g, '');
+    return number && amount ? { number: normalizeNumber(number), amount } : null;
+  }
+
+  function handleParseNumAkhar() {
+    setNotice('');
+    const result = parseNumAkhar(text);
+    if (result.rows.length) addRows(result.rows);
+    if (result.errors.length) {
+      if (result.cleanedText) setText(result.cleanedText);
+      setNotice(result.errors[0]);
+    } else if (!result.rows.length) {
+      setNotice('Enter Num-Akhar patterns before parsing.');
+    } else {
+      setText('');
+    }
+  }
+
   async function submit() {
     setNotice('');
     if (!ledgerId || !meta.shift) {
@@ -174,20 +379,28 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       setNotice('Selected shift is expired.');
       return;
     }
+    const draftRow = active === 'Entry' ? getManualDraftRow() : null;
+    const rowsForSubmit = draftRow ? [...rows, draftRow] : rows;
+
+    if (!rowsForSubmit.length) {
+      setNotice('Enter number and amount before submitting.');
+      return;
+    }
 
     const payload = {
       party: ledgerId,
       shift: meta.shift,
       dateoftrnforapponly: todayDisplay(),
       dateoftrn: todayIso(),
-      trn_number: rows.map((row) => row.number),
-      trn_amount: rows.map((row) => row.amount)
+      trn_number: rowsForSubmit.map((row) => row.number),
+      trn_amount: rowsForSubmit.map((row) => row.amount)
     };
 
     const result = await api.submitTransaction(payload);
     setNotice(result.success ? 'Entry submitted.' : (result.error || 'Submission failed.'));
     if (result.success) {
       setRows([]);
+      setManualDraft({ number: '', amount: '' });
       refreshBalance();
     }
   }
@@ -251,8 +464,13 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
       {active === 'Num-Akhar' && (
         <section className="panel form-panel">
-          <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="Example: 12 50 34 100" />
-          <button className="primary-button" onClick={() => addRows(parseNumAkhar(text))}>Parse</button>
+          <textarea
+            value={text}
+            onBlur={() => setText((current) => normalizeAkharText(current))}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Example: 1,2,3*10 or 11,22(100)"
+          />
+          <button className="primary-button" onClick={handleParseNumAkhar}>Done</button>
         </section>
       )}
 
@@ -270,15 +488,33 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           <input placeholder="Left digits" value={cross.left} onChange={(event) => setCross((current) => ({ ...current, left: event.target.value }))} />
           <input placeholder="Right digits" value={cross.right} onChange={(event) => setCross((current) => ({ ...current, right: event.target.value }))} />
           <input placeholder="Amount" value={cross.amount} onChange={(event) => setCross((current) => ({ ...current, amount: event.target.value.replace(/\D/g, '') }))} />
-          <button className="primary-button" onClick={() => addRows(buildCross(cross.left, cross.right, cross.amount))}>Combine</button>
+          <select value={cross.joda} onChange={(event) => setCross((current) => ({ ...current, joda: event.target.value }))}>
+            <option value="Yes">Joda yes</option>
+            <option value="No">Joda no</option>
+          </select>
+          <button className="primary-button" onClick={() => addRows(buildCross(cross.left, cross.right, cross.amount, cross.joda))}>Done</button>
         </section>
       )}
 
-      {active === 'Jantri' ? <JantriGrid grid={grid} setGrid={setGrid} /> : <EntryRows rows={rows} setRows={setRows} />}
+      {active === 'Entry' ? <ManualEntryRows rows={rows} setRows={setRows} draft={manualDraft} setDraft={setManualDraft} setNotice={setNotice} /> : null}
+      {active === 'Jantri' ? <JantriGrid grid={grid} setGrid={setGrid} /> : null}
+      {active !== 'Entry' && active !== 'Jantri' ? <EntryRows rows={rows} setRows={setRows} /> : null}
 
       <div className="submit-bar">
         {notice ? <span className="notice">{notice}</span> : <span />}
-        <button className="secondary-button" onClick={() => active === 'Jantri' ? setGrid({}) : setRows([])}>Reset</button>
+        <button
+          className="secondary-button"
+          onClick={() => {
+            if (active === 'Jantri') {
+              setGrid({});
+            } else {
+              setRows([]);
+              if (active === 'Entry') setManualDraft({ number: '', amount: '' });
+            }
+          }}
+        >
+          Reset
+        </button>
         <button className="primary-button" onClick={active === 'Jantri' ? submitJantri : submit}>{active === 'Jantri' ? 'Submit Jantri' : 'Submit Entry'}</button>
       </div>
     </div>

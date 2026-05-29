@@ -54,6 +54,8 @@ class Transactions extends Api_Controller
             return $this->validation_error($errors);
         }
 
+        $shift_id = $this->resolve_shift_id($this->request_data['shift'], $payload['updated_by']);
+
         $fields = array(
             'party' => $this->request_data['party'],
             'dateoftrnforapponly' => $this->request_data['dateoftrnforapponly'],
@@ -61,13 +63,15 @@ class Transactions extends Api_Controller
             'userid' => $payload['user_id'],
             'entryval' => 'Entry-page.php?login=' . $payload['user_id'] . '&user_type=ledger',
             'updated_by' => $payload['updated_by'],
-            'shift' => $this->request_data['shift'],
+            'shift' => $shift_id,
             'trn_number' => $this->request_data['trn_number'],
             'trn_amount' => $this->request_data['trn_amount'],
             'submitpost' => 'submit'
         );
 
-        return $this->proxy_post('/tbl_transactions/add_transaction_final_app', $fields, 'Transaction submitted successfully', 'Submission failed. Please check shift times and parameters.');
+        $this->config->load('api', true);
+        $path = $this->config->item('remote_transaction_create_path', 'api') ?: '/tbl_transactions/add_transaction_final_app_api';
+        return $this->proxy_post($path, $fields, 'Transaction submitted successfully', 'Submission failed. Please check shift times and parameters.');
     }
 
     public function create_jantri()
@@ -86,6 +90,8 @@ class Transactions extends Api_Controller
             return $this->validation_error($errors);
         }
 
+        $shift_id = $this->resolve_shift_id($this->request_data['shift'], $payload['updated_by']);
+
         $fields = array(
             'party' => $this->request_data['party'],
             'dateoftrnforapponly' => $this->request_data['dateoftrnforapponly'],
@@ -93,7 +99,7 @@ class Transactions extends Api_Controller
             'userid' => $payload['user_id'],
             'entryval' => 'Entry-page.php?login=' . $payload['user_id'] . '&user_type=ledger',
             'updated_by' => $payload['updated_by'],
-            'shift' => $this->request_data['shift'],
+            'shift' => $shift_id,
             'ttamntt' => '0',
             'gtotal' => $this->request_data['gtotal'],
             'submitpost' => 'submit'
@@ -140,8 +146,9 @@ class Transactions extends Api_Controller
     {
         $this->config->load('api', true);
         $base_url = rtrim($this->config->item('remote_transaction_base_url', 'api'), '/');
+        $target_url = $base_url . $path;
 
-        $ch = curl_init($base_url . $path);
+        $ch = curl_init($target_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
@@ -157,6 +164,23 @@ class Transactions extends Api_Controller
             return $this->error('Remote submission failed', 502, array('remote_error' => $error));
         }
 
+        $body = $response;
+        if (!empty($info['header_size'])) {
+            $body = substr($response, (int) $info['header_size']);
+        }
+        $json = json_decode(trim($body), true);
+        if (is_array($json)) {
+            $ok = !empty($json['status']) || !empty($json['success']);
+            if ($ok) {
+                return $this->success(isset($json['data']) ? $json['data'] : $json, isset($json['message']) ? $json['message'] : $success_message, 201);
+            }
+
+            return $this->error(isset($json['message']) ? $json['message'] : $failure_message, 422, array(
+                'remote' => $json,
+                'target_url' => $target_url
+            ));
+        }
+
         $redirect_url = isset($info['redirect_url']) ? $info['redirect_url'] : '';
         if (!$redirect_url && preg_match('/Location:\s*([^\r\n]+)/i', $response, $matches)) {
             $redirect_url = trim($matches[1]);
@@ -166,6 +190,49 @@ class Transactions extends Api_Controller
             return $this->success(array('status' => 1), $success_message, 201);
         }
 
-        return $this->error($failure_message, 422, array('redirect' => $redirect_url));
+        return $this->error($failure_message, 422, array('redirect' => $redirect_url, 'target_url' => $target_url));
+    }
+
+    protected function resolve_shift_id($submitted_shift, $updated_by)
+    {
+        $submitted_shift = (int) $submitted_shift;
+        if (!$submitted_shift || !$updated_by) {
+            return $submitted_shift;
+        }
+
+        $fromdate = date('Y-m-d');
+        $todate = date('Y-m-d', time() + (12 * 60 * 60));
+
+        $rows = $this->db
+            ->select('user_shift_timings.id, user_shift_timings.shift_id, user_shift_timings.app_time, user_shift_timings.open_date')
+            ->from('user_shift_timings')
+            ->where('user_shift_timings.updated_by', $updated_by)
+            ->where('user_shift_timings.open_date >=', $fromdate)
+            ->where('user_shift_timings.open_date <=', $todate)
+            ->group_start()
+                ->where('user_shift_timings.id', $submitted_shift)
+                ->or_where('user_shift_timings.shift_id', $submitted_shift)
+            ->group_end()
+            ->order_by('user_shift_timings.open_date', 'ASC')
+            ->order_by('user_shift_timings.master', 'ASC')
+            ->get()
+            ->result_array();
+
+        $now = time();
+        foreach ($rows as $row) {
+            $limit = strtotime(date('d-m-Y', strtotime($row['open_date'])) . ' ' . date('H:i', strtotime($row['app_time'])));
+            if ($now < $limit && (int) $row['id'] === $submitted_shift) {
+                return (int) $row['id'];
+            }
+        }
+
+        foreach ($rows as $row) {
+            $limit = strtotime(date('d-m-Y', strtotime($row['open_date'])) . ' ' . date('H:i', strtotime($row['app_time'])));
+            if ($now < $limit && (int) $row['shift_id'] === $submitted_shift) {
+                return (int) $row['id'];
+            }
+        }
+
+        return $submitted_shift;
     }
 }

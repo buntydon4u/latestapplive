@@ -38,7 +38,7 @@ class Ledger_model extends CI_Model
         $todate = date('Y-m-d', time() + (12 * 60 * 60));
 
         return $this->db
-            ->select('tbl_shift.id AS id, tbl_shift.shift_name AS name, user_shift_timings.app_time, user_shift_timings.open_date, tbl_shift.super_admin')
+            ->select('user_shift_timings.id AS id, tbl_shift.id AS tbl_shift_id, tbl_shift.shift_name AS name, user_shift_timings.app_time, user_shift_timings.open_date, tbl_shift.super_admin')
             ->from('user_shift_timings')
             ->join('tbl_shift', 'user_shift_timings.shift_id = tbl_shift.id', 'left')
             ->where('user_shift_timings.updated_by', $updated_by)
