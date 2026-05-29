@@ -122,21 +122,21 @@ function JantriGrid({ grid, setGrid }) {
 }
 
 export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) {
-  const { refreshBalance } = useAuth();
+  const { user, refreshBalance } = useAuth();
   const [active, setActive] = useState(initialMode);
-  const [parties, setParties] = useState([]);
   const [shifts, setShifts] = useState([]);
-  const [meta, setMeta] = useState({ party: '', shift: '', date: todayIso() });
+  const [meta, setMeta] = useState({ shift: '' });
   const [text, setText] = useState('');
   const [range, setRange] = useState({ from: '', to: '', amount: '' });
   const [cross, setCross] = useState({ left: '', right: '', amount: '' });
   const [rows, setRows] = useState([]);
   const [grid, setGrid] = useState({});
   const [notice, setNotice] = useState('');
+  const ledgerId = user?.id;
+  const currentDateDisplay = todayDisplay();
 
   useEffect(() => {
-    Promise.all([api.parties(), api.shifts()]).then(([partyResult, shiftResult]) => {
-      if (partyResult.success) setParties(partyResult.parties || []);
+    api.shifts().then((shiftResult) => {
       if (shiftResult.success) setShifts(shiftResult.shifts || []);
     });
   }, []);
@@ -166,8 +166,8 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
   async function submit() {
     setNotice('');
-    if (!meta.party || !meta.shift) {
-      setNotice('Select party and shift before submitting.');
+    if (!ledgerId || !meta.shift) {
+      setNotice('Select shift before submitting.');
       return;
     }
     if (selectedShiftExpired()) {
@@ -176,10 +176,10 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     }
 
     const payload = {
-      party: meta.party,
+      party: ledgerId,
       shift: meta.shift,
       dateoftrnforapponly: todayDisplay(),
-      dateoftrn: meta.date,
+      dateoftrn: todayIso(),
       trn_number: rows.map((row) => row.number),
       trn_amount: rows.map((row) => row.amount)
     };
@@ -194,8 +194,8 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
   async function submitJantri() {
     setNotice('');
-    if (!meta.party || !meta.shift) {
-      setNotice('Select party and shift before submitting.');
+    if (!ledgerId || !meta.shift) {
+      setNotice('Select shift before submitting.');
       return;
     }
     if (selectedShiftExpired()) {
@@ -209,10 +209,10 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       return;
     }
     const result = await api.submitJantri({
-      party: meta.party,
+      party: ledgerId,
       shift: meta.shift,
       dateoftrnforapponly: todayDisplay(),
-      dateoftrn: meta.date,
+      dateoftrn: todayIso(),
       trn_amount: amounts,
       b: [],
       a: [],
@@ -227,24 +227,21 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
   return (
     <div className="page-stack">
+      <div className="entry-page-head">
+        <span />
+        <div className="entry-date-chip">
+          <span>Date</span>
+          <b>{currentDateDisplay}</b>
+        </div>
+      </div>
+
       <section className="toolbar panel">
-        <label>
-          <span>Party</span>
-          <select value={meta.party} onChange={(event) => setMeta((current) => ({ ...current, party: event.target.value }))}>
-            <option value="">Choose party</option>
-            {parties.map((party) => <option key={party.id} value={party.id}>{party.name}</option>)}
-          </select>
-        </label>
         <label>
           <span>Shift</span>
           <select value={meta.shift} onChange={(event) => setMeta((current) => ({ ...current, shift: event.target.value }))}>
             <option value="">Choose shift</option>
             {shifts.map((shift) => <option key={`${shift.id}-${shift.open_date}`} value={shift.id} disabled={shift.expired}>{shift.name} {shift.expired ? '(expired)' : ''}</option>)}
           </select>
-        </label>
-        <label>
-          <span>Date</span>
-          <input type="date" value={meta.date} onChange={(event) => setMeta((current) => ({ ...current, date: event.target.value }))} />
         </label>
       </section>
 

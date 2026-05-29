@@ -37,3 +37,6 @@ $route['api/v1/jantri']['options'] = 'api/v1/Transactions/create_jantri';
 
 $route['api/v1/hisabs']['get'] = 'api/v1/Hisabs/index';
 $route['api/v1/hisabs']['options'] = 'api/v1/Hisabs/index';
+
+$route['api/v1/results/latest']['get'] = 'api/v1/Results/latest';
+$route['api/v1/results/latest']['options'] = 'api/v1/Results/latest';

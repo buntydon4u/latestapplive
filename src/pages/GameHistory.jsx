@@ -17,14 +17,12 @@ function formatDate(value) {
 export default function GameHistory() {
   const [transactions, setTransactions] = useState([]);
   const [shifts, setShifts] = useState([]);
-  const [parties, setParties] = useState([]);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    Promise.all([api.transactions(), api.shifts(), api.parties()]).then(([transactionResult, shiftResult, partyResult]) => {
+    Promise.all([api.transactions(), api.shifts()]).then(([transactionResult, shiftResult]) => {
       if (transactionResult.success) setTransactions(transactionResult.transactions || []);
       if (shiftResult.success) setShifts(shiftResult.shifts || []);
-      if (partyResult.success) setParties(partyResult.parties || []);
     });
   }, []);
 
@@ -40,7 +38,7 @@ export default function GameHistory() {
           <div>
             <span className="eyebrow">Played Games</span>
             <h1>Game History</h1>
-            <p className="title-subline">{transactions.length} entries · {shifts.length} shifts · {parties.length} parties</p>
+            <p className="title-subline">{transactions.length} entries · {shifts.length} shifts</p>
           </div>
           <div className="filter-tabs">
             {['all', 'win', 'loss'].map((item) => (

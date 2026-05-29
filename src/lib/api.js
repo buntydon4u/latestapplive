@@ -169,13 +169,18 @@ export const api = {
     const result = await request('hisabs');
     return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
   },
+  declaredResults: async (limit = 10) => {
+    const result = await request('results/latest', { params: { limit } });
+    return { ...result, results: Array.isArray(result.data) ? result.data : [] };
+  },
   submitTransaction: (body) => request('transactions', { method: 'POST', body }),
   submitJantri: (body) => request('jantri', { method: 'POST', body }),
   deleteTransaction: (id) => request(`transactions/${id}`, { method: 'DELETE' })
 };
 
 export function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 export function todayDisplay() {

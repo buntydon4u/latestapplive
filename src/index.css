@@ -660,7 +660,7 @@ footer {
 
 .toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr 180px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -1373,6 +1373,31 @@ footer {
   font-weight: 700;
 }
 
+.entry-page-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 34px;
+}
+
+.entry-date-chip {
+  display: inline-grid;
+  justify-items: end;
+  gap: 2px;
+  color: var(--premium-text);
+}
+
+.entry-date-chip span {
+  color: var(--premium-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.entry-date-chip b {
+  font-size: 0.92rem;
+}
+
 .quick-action-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -1967,8 +1992,7 @@ footer {
 }
 
 .market-copy h3,
-.premium-record-card h3,
-.result-card h3 {
+.premium-record-card h3 {
   margin: 0 0 6px;
   overflow-wrap: anywhere;
   color: var(--premium-text);
@@ -1980,7 +2004,6 @@ footer {
 
 .market-copy p,
 .premium-record-card p,
-.result-card p,
 .result-card p {
   margin: 3px 0;
   color: var(--premium-muted);
@@ -2154,8 +2177,7 @@ footer {
 }
 
 .premium-title-row,
-.premium-record-card,
-.result-card {
+.premium-record-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2193,8 +2215,7 @@ footer {
   padding: 14px;
 }
 
-.premium-record-card > div,
-.result-card > div {
+.premium-record-card > div {
   min-width: 0;
 }
 
@@ -2215,13 +2236,53 @@ footer {
 }
 
 .result-card {
-  min-height: 112px;
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+  min-height: 118px;
   padding: 14px;
+}
+
+.result-card-header {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.result-card h3 {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--premium-text);
+  font-size: 0.95rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.result-card p {
+  margin: 0;
+  color: var(--premium-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.result-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
 }
 
 .result-card strong {
   color: var(--premium-gold);
-  font-size: 1.55rem;
+  font-size: 2rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .premium-empty {
