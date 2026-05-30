@@ -26,7 +26,6 @@ export default function Wallet() {
     <div className="premium-page">
       <BalanceCard balance={balance} />
       <section className="wallet-actions">
-        <PremiumButton className="green-cta">+ Add Money</PremiumButton>
         <PremiumButton className="gold-cta">Withdraw</PremiumButton>
       </section>
       <section className="dashboard-api-summary">

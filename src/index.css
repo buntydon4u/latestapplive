@@ -1646,6 +1646,9 @@ footer {
 }
 
 /* Premium authenticated mobile redesign */
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --premium-bg: #050505;
   --premium-bg-alt: #07040d;
@@ -1684,8 +1687,7 @@ footer {
 }
 
 .header-icon,
-.wallet-pill,
-.add-money-link {
+.wallet-pill {
   border: 0;
   color: var(--premium-text);
 }
@@ -1740,17 +1742,6 @@ footer {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.82rem;
-}
-
-.add-money-link {
-  min-height: 34px;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--premium-gold);
-  padding: 0 4px;
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .notification small {
@@ -2386,10 +2377,6 @@ footer {
     padding-inline: 4px;
   }
 
-  .add-money-link {
-    display: none;
-  }
-
   .wallet-pill {
     max-width: 104px;
   }
@@ -2400,5 +2387,39 @@ footer {
 
   .dashboard-api-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Result admin login theme */
+.admin-login-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 8% 3%, rgba(91, 33, 8, 0.62), transparent 28%),
+    radial-gradient(circle at 89% 85%, rgba(92, 38, 4, 0.52), transparent 30%),
+    linear-gradient(135deg, #331204 0%, #151515 44%, #111111 60%, #331204 100%);
+}
+
+.admin-login-panel {
+  min-height: 100vh;
+  min-height: 100svh;
+  background:
+    linear-gradient(135deg, rgba(67, 24, 5, 0.82) 0%, rgba(23, 23, 23, 0.97) 44%, rgba(20, 20, 20, 0.98) 58%, rgba(52, 19, 5, 0.9) 100%);
+}
+
+.web-phone-screen .admin-login-page,
+.web-phone-screen .admin-login-panel {
+  min-height: 100%;
+}
+
+@media (max-width: 520px) {
+  .admin-login-panel {
+    padding: 42px 26px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-login-panel {
+    padding-inline: 20px;
   }
 }

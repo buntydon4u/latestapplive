@@ -3,16 +3,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const bottomNavItems = [
   { id: 'home', label: 'Home', icon: 'H' },
-  { id: 'wallet', label: 'Wallet', icon: 'W' },
+  { id: 'jantri', label: 'Jantri', icon: 'J' },
   { id: 'history', label: 'Game History', icon: 'G' },
-  { id: 'chart', label: 'Chart', icon: 'C' }
+  { id: 'help', label: 'Help', icon: '?' }
 ];
 
 const drawerItems = [
-  { id: 'entry', label: 'Entry' },
-  { id: 'fromto', label: 'From-To Entry' },
-  { id: 'cross', label: 'Cross Entry' },
-  { id: 'jantri', label: 'Jantri Entry' },
   { id: 'hisab', label: 'Hisab Report' },
   { id: 'statement', label: 'Statement' }
 ];
@@ -97,7 +93,6 @@ function AuthHeader({ activePage, onNavigate, onMenu }) {
           <span>W</span>
           <b>{formatMoney(balance)}</b>
         </button>
-        <button className="add-money-link" onClick={() => onNavigate('wallet')} type="button">Add Money</button>
         <button className="header-icon notification" type="button" aria-label="Notifications">
           !
           <small>1</small>
@@ -109,13 +104,21 @@ function AuthHeader({ activePage, onNavigate, onMenu }) {
 }
 
 function BottomTabNavigation({ activePage, onNavigate }) {
+  function handleNavigate(item) {
+    if (item.id === 'help') {
+      window.open('https://wa.me/', '_blank', 'noopener,noreferrer');
+      return;
+    }
+    onNavigate(item.id);
+  }
+
   return (
     <nav className="auth-bottom-nav" aria-label="Authenticated navigation">
       {bottomNavItems.map((item) => (
         <button
           className={`bottom-nav-item ${activePage === item.id ? 'active' : ''}`}
           key={item.id}
-          onClick={() => onNavigate(item.id)}
+          onClick={() => handleNavigate(item)}
           type="button"
         >
           <span>{item.icon}</span>

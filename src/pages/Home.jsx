@@ -183,21 +183,6 @@ export default function Home({ onNavigate, onPlayShift }) {
         </article>
       </section>
 
-      <section className="quick-actions-row">
-        <PremiumButton className="quick-card trophy-card" onClick={() => onNavigate('history')}>
-          <span>♛</span>
-          <b>Top Winner</b>
-        </PremiumButton>
-        <PremiumButton className="quick-card green-card" onClick={() => window.open('https://wa.me/', '_blank', 'noopener,noreferrer')}>
-          <span>?</span>
-          <b>Help</b>
-        </PremiumButton>
-        <PremiumButton className="quick-card green-card" onClick={() => onNavigate('wallet')}>
-          <span>+</span>
-          <b>Add Money</b>
-        </PremiumButton>
-      </section>
-
       <section className="live-results-section">
         <h2>Live Shifts</h2>
         {loading ? <LoadingState label="Loading markets..." /> : null}
