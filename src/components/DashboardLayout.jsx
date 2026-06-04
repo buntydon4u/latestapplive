@@ -10,7 +10,10 @@ const bottomNavItems = [
 
 const drawerItems = [
   { id: 'hisab', label: 'Hisab Report' },
-  { id: 'statement', label: 'Statement' }
+  { id: 'statement', label: 'Statement' },
+  { type: 'section', label: 'Account' },
+  { id: 'accountProfile', label: 'Profile' },
+  { id: 'changePassword', label: 'Change Password' }
 ];
 
 export function formatMoney(value) {
@@ -155,9 +158,13 @@ export default function DashboardLayout({ children, activePage, onNavigate }) {
             </div>
             <div className="premium-drawer-list">
               {drawerItems.map((item) => (
-                <button key={item.id} onClick={() => navigate(item.id)} type="button">
-                  {item.label}
-                </button>
+                item.type === 'section'
+                  ? <span className="drawer-section-title" key={item.label}>{item.label}</span>
+                  : (
+                    <button key={item.id} onClick={() => navigate(item.id)} type="button">
+                      {item.label}
+                    </button>
+                  )
               ))}
               <button className="danger-drawer-action" onClick={logout} type="button">Logout</button>
             </div>

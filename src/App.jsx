@@ -10,30 +10,65 @@ import Home from './pages/Home.jsx';
 import Wallet from './pages/Wallet.jsx';
 import GameHistory from './pages/GameHistory.jsx';
 import ChartResults from './pages/ChartResults.jsx';
+import PartyJantri from './pages/PartyJantri.jsx';
+import AccountProfile from './pages/AccountProfile.jsx';
+import ChangePassword from './pages/ChangePassword.jsx';
 import WebPhoneFrame from './components/WebPhoneFrame.jsx';
+
+const pagePaths = {
+  home: '/',
+  wallet: '/wallet',
+  history: '/history',
+  chart: '/chart',
+  entry: '/entry',
+  fromto: '/entry/from-to',
+  cross: '/entry/cross',
+  jantri: '/jantri/party',
+  results: '/results',
+  hisab: '/reports/hisab',
+  statement: '/reports/statement',
+  accountProfile: '/account/profile',
+  changePassword: '/account/change-password'
+};
+
+const pathPages = Object.fromEntries(Object.entries(pagePaths).map(([page, path]) => [path, page]));
+
+function pageFromPath() {
+  return pathPages[window.location.pathname] || 'home';
+}
 
 function AppRoutes() {
   const { user, parentSelection, loading } = useAuth();
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState(pageFromPath);
   const [selectedShiftId, setSelectedShiftId] = useState('');
+
+  function navigate(page) {
+    setActivePage(page);
+    const path = pagePaths[page];
+    if (path && window.location.pathname !== path) {
+      window.history.pushState({ page }, '', path);
+    }
+  }
 
   function navigateToEntry(shiftId, mode = 'entry') {
     setSelectedShiftId(shiftId ? String(shiftId) : '');
-    setActivePage(mode);
+    navigate(mode);
   }
 
   const pages = {
-    home: () => <Home onNavigate={setActivePage} onPlayShift={navigateToEntry} />,
+    home: () => <Home onNavigate={navigate} onPlayShift={navigateToEntry} />,
     wallet: Wallet,
     history: GameHistory,
     chart: ChartResults,
     entry: () => <DataEntry initialMode="Entry" initialShift={selectedShiftId} />,
     fromto: () => <DataEntry initialMode="From-To" initialShift={selectedShiftId} />,
     cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
-    jantri: () => <DataEntry initialMode="Jantri" initialShift={selectedShiftId} />,
+    jantri: PartyJantri,
     results: ViewResults,
     hisab: () => <Reports initialView="hisab" />,
-    statement: () => <Reports initialView="statement" />
+    statement: () => <Reports initialView="statement" />,
+    accountProfile: AccountProfile,
+    changePassword: ChangePassword
   };
   const Page = pages[activePage] || pages.home;
 
@@ -43,6 +78,15 @@ function AppRoutes() {
       setSelectedShiftId('');
     }
   }, [user]);
+
+  useEffect(() => {
+    function handlePopState() {
+      setActivePage(pageFromPath());
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   if (loading) {
     return <div className="boot-screen"><span className="loader" />Loading</div>;
@@ -57,7 +101,7 @@ function AppRoutes() {
   }
 
   return (
-    <DashboardLayout activePage={activePage} onNavigate={setActivePage}>
+    <DashboardLayout activePage={activePage} onNavigate={navigate}>
       {typeof Page === 'function' ? <Page /> : <Page />}
     </DashboardLayout>
   );

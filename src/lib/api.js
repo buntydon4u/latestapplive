@@ -173,6 +173,32 @@ export const api = {
     const result = await request('results/latest', { params: { limit } });
     return { ...result, results: Array.isArray(result.data) ? result.data : [] };
   },
+  jantriPartyMeta: async () => {
+    const result = await request('party-jantri/meta');
+    return {
+      ...result,
+      shifts: Array.isArray(result.shifts) ? result.shifts : []
+    };
+  },
+  jantriPartyReport: async (params) => {
+    const result = await request('party-jantri/report', { params });
+    const report = result.data && typeof result.data === 'object' ? result.data : {};
+    return {
+      ...result,
+      rows: Array.isArray(report.rows) ? report.rows : [],
+      filters: report.filters || {},
+      summary: report.summary || { totalAmount: 0, totalRows: 0 }
+    };
+  },
+  getMyProfile: async () => {
+    const result = await request('account/profile');
+    return { ...result, profile: result.profile || null };
+  },
+  updateMyProfile: async (body) => {
+    const result = await request('account/profile', { method: 'PUT', body });
+    return { ...result, profile: result.profile || null };
+  },
+  changeMyPassword: (body) => request('account/change-password', { method: 'PUT', body }),
   submitTransaction: (body) => request('transactions', { method: 'POST', body }),
   submitJantri: (body) => request('jantri', { method: 'POST', body }),
   deleteTransaction: (id) => request(`transactions/${id}`, { method: 'DELETE' })

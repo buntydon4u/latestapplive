@@ -26,6 +26,12 @@ $route['api/v1/shifts']['options'] = 'api/v1/Ledgers/shifts';
 $route['api/v1/balance']['get'] = 'api/v1/Ledgers/balance';
 $route['api/v1/balance']['options'] = 'api/v1/Ledgers/balance';
 
+$route['api/v1/account/profile']['get'] = 'api/v1/Account/profile';
+$route['api/v1/account/profile']['put'] = 'api/v1/Account/profile';
+$route['api/v1/account/profile']['options'] = 'api/v1/Account/profile';
+$route['api/v1/account/change-password']['put'] = 'api/v1/Account/change_password';
+$route['api/v1/account/change-password']['options'] = 'api/v1/Account/change_password';
+
 $route['api/v1/transactions']['get'] = 'api/v1/Transactions/index';
 $route['api/v1/transactions']['post'] = 'api/v1/Transactions/create';
 $route['api/v1/transactions']['options'] = 'api/v1/Transactions/index';
@@ -34,6 +40,14 @@ $route['api/v1/transactions/(:num)']['delete'] = 'api/v1/Transactions/delete/$1'
 $route['api/v1/transactions/(:num)']['options'] = 'api/v1/Transactions/show/$1';
 $route['api/v1/jantri']['post'] = 'api/v1/Transactions/create_jantri';
 $route['api/v1/jantri']['options'] = 'api/v1/Transactions/create_jantri';
+$route['api/v1/jantri/party/meta']['get'] = 'api/v1/PartyJantri/meta';
+$route['api/v1/jantri/party/meta']['options'] = 'api/v1/PartyJantri/meta';
+$route['api/v1/jantri/party/report']['get'] = 'api/v1/PartyJantri/report';
+$route['api/v1/jantri/party/report']['options'] = 'api/v1/PartyJantri/report';
+$route['api/v1/party-jantri/meta']['get'] = 'api/v1/PartyJantri/meta';
+$route['api/v1/party-jantri/meta']['options'] = 'api/v1/PartyJantri/meta';
+$route['api/v1/party-jantri/report']['get'] = 'api/v1/PartyJantri/report';
+$route['api/v1/party-jantri/report']['options'] = 'api/v1/PartyJantri/report';
 
 $route['api/v1/hisabs']['get'] = 'api/v1/Hisabs/index';
 $route['api/v1/hisabs']['options'] = 'api/v1/Hisabs/index';
