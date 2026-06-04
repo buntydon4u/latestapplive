@@ -15,6 +15,30 @@ function normalizeNumber(value) {
   return String(value || '').replace(/\D/g, '').slice(-2).padStart(2, '0');
 }
 
+function sanitizeEntryNumber(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (digits.length <= 2) return digits;
+  if (digits[0] !== digits[1]) return digits.slice(0, 2);
+
+  let repeated = '';
+  for (const digit of digits) {
+    if (digit !== digits[0]) break;
+    repeated += digit;
+    if (repeated.length === 4) break;
+  }
+  return repeated;
+}
+
+function normalizeEntryNumber(value) {
+  const number = sanitizeEntryNumber(value);
+  return number.length <= 2 ? normalizeNumber(number) : number;
+}
+
+function shouldAdvanceNumberFocus(number) {
+  if (number.length === 4) return true;
+  return number.length === 2 && number[0] !== number[1];
+}
+
 function cleanWhatsAppText(rawText) {
   return String(rawText || '')
     .split('\n')
@@ -146,6 +170,14 @@ function buildCross(left, right, amount, joda = 'Yes') {
   return uniqueRows(rows);
 }
 
+function buildJantriRows(grid) {
+  return Array.from({ length: 100 }, (_, index) => {
+    const number = String(index).padStart(2, '0');
+    const amount = String(grid[number] || '').replace(/\D/g, '');
+    return amount ? { number, amount } : null;
+  }).filter(Boolean);
+}
+
 function EntryRows({ rows, setRows }) {
   const total = rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
 
@@ -158,7 +190,7 @@ function EntryRows({ rows, setRows }) {
       <div className="entry-table">
         {rows.map((row, index) => (
           <div className="entry-row" key={`${row.number}-${index}`}>
-            <input value={row.number} maxLength="4" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, number: event.target.value.replace(/\D/g, '').slice(0, 4) } : item))} />
+            <input value={row.number} maxLength="4" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, number: sanitizeEntryNumber(event.target.value) } : item))} />
             <input value={row.amount} inputMode="numeric" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, amount: event.target.value.replace(/\D/g, '') } : item))} />
             <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
           </div>
@@ -182,19 +214,19 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
   }
 
   function updateRowNumber(index, value) {
-    const number = value.replace(/\D/g, '').slice(0, 2);
+    const number = sanitizeEntryNumber(value);
     updateRow(index, 'number', number);
-    if (number.length === 2) rowAmountRefs.current[index]?.focus();
+    if (shouldAdvanceNumberFocus(number)) rowAmountRefs.current[index]?.focus();
   }
 
   function updateDraftNumber(value) {
-    const number = value.replace(/\D/g, '').slice(0, 2);
+    const number = sanitizeEntryNumber(value);
     setDraft((current) => ({ ...current, number }));
-    if (number.length === 2) amountRef.current?.focus();
+    if (shouldAdvanceNumberFocus(number)) amountRef.current?.focus();
   }
 
   function addDraftRow() {
-    const number = draft.number.replace(/\D/g, '').slice(0, 2);
+    const number = sanitizeEntryNumber(draft.number);
     const amount = draft.amount.replace(/\D/g, '');
 
     if (!number || !amount) {
@@ -202,7 +234,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
       return;
     }
 
-    setRows((current) => [...current, { number: normalizeNumber(number), amount }]);
+    setRows((current) => [...current, { number: normalizeEntryNumber(number), amount }]);
     setDraft({ number: '', amount: '' });
     setNotice('');
     window.setTimeout(() => numberRef.current?.focus(), 0);
@@ -219,7 +251,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
           <div className="entry-row" key={`${row.number}-${index}`}>
             <input
               value={row.number}
-              maxLength="2"
+              maxLength="4"
               inputMode="numeric"
               placeholder="Number"
               onChange={(event) => updateRowNumber(index, event.target.value)}
@@ -238,7 +270,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
           <input
             ref={numberRef}
             value={draft.number}
-            maxLength="2"
+            maxLength="4"
             inputMode="numeric"
             placeholder="Number"
             onChange={(event) => updateDraftNumber(event.target.value)}
@@ -263,7 +295,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
   );
 }
 
-function JantriGrid({ grid, setGrid }) {
+function JantriGrid({ grid, setGrid, onBuild }) {
   const refs = useRef([]);
   const numbers = useMemo(() => Array.from({ length: 100 }, (_, index) => String(index).padStart(2, '0')), []);
   const total = Object.values(grid).reduce((sum, value) => sum + Number(value || 0), 0);
@@ -301,6 +333,7 @@ function JantriGrid({ grid, setGrid }) {
           </label>
         ))}
       </div>
+      <button className="primary-button" onClick={onBuild}>Build</button>
     </section>
   );
 }
@@ -345,28 +378,57 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     return shifts.find((shift) => String(shift.id) === String(meta.shift))?.expired;
   }
 
-  function addRows(newRows) {
-    setRows((current) => uniqueRows([...current, ...newRows]));
-  }
-
   function getManualDraftRow() {
-    const number = manualDraft.number.replace(/\D/g, '').slice(0, 2);
+    const number = sanitizeEntryNumber(manualDraft.number);
     const amount = manualDraft.amount.replace(/\D/g, '');
-    return number && amount ? { number: normalizeNumber(number), amount } : null;
+    return number && amount ? { number: normalizeEntryNumber(number), amount } : null;
   }
 
   function handleParseNumAkhar() {
     setNotice('');
     const result = parseNumAkhar(text);
-    if (result.rows.length) addRows(result.rows);
     if (result.errors.length) {
       if (result.cleanedText) setText(result.cleanedText);
       setNotice(result.errors[0]);
     } else if (!result.rows.length) {
       setNotice('Enter Num-Akhar patterns before parsing.');
     } else {
+      setRows(result.rows);
       setText('');
     }
+  }
+
+  function handleBuildRange() {
+    setNotice('');
+    const newRows = buildRange(range.from, range.to, range.amount);
+    if (!newRows.length) {
+      setNotice('Enter valid From-To numbers and amount before building.');
+      return;
+    }
+    setRows(uniqueRows(newRows));
+    setRange({ from: '', to: '', amount: '' });
+  }
+
+  function handleBuildCross() {
+    setNotice('');
+    const newRows = buildCross(cross.left, cross.right, cross.amount, cross.joda);
+    if (!newRows.length) {
+      setNotice('Enter valid Cross digits and amount before building.');
+      return;
+    }
+    setRows(newRows);
+    setCross({ left: '', right: '', amount: '', joda: cross.joda });
+  }
+
+  function handleBuildJantri() {
+    setNotice('');
+    const newRows = buildJantriRows(grid);
+    if (!newRows.length) {
+      setNotice('Enter Jantri amounts before building.');
+      return;
+    }
+    setRows(newRows);
+    setGrid({});
   }
 
   async function submit() {
@@ -401,39 +463,6 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     if (result.success) {
       setRows([]);
       setManualDraft({ number: '', amount: '' });
-      refreshBalance();
-    }
-  }
-
-  async function submitJantri() {
-    setNotice('');
-    if (!ledgerId || !meta.shift) {
-      setNotice('Select shift before submitting.');
-      return;
-    }
-    if (selectedShiftExpired()) {
-      setNotice('Selected shift is expired.');
-      return;
-    }
-    const amounts = Array.from({ length: 100 }, (_, index) => grid[String(index).padStart(2, '0')] || '');
-    const gtotal = amounts.reduce((sum, value) => sum + Number(value || 0), 0);
-    if (gtotal <= 0) {
-      setNotice('Enter Jantri amounts before submitting.');
-      return;
-    }
-    const result = await api.submitJantri({
-      party: ledgerId,
-      shift: meta.shift,
-      dateoftrnforapponly: todayDisplay(),
-      dateoftrn: todayIso(),
-      trn_amount: amounts,
-      b: [],
-      a: [],
-      gtotal
-    });
-    setNotice(result.success ? 'Jantri submitted.' : (result.error || 'Jantri submission failed.'));
-    if (result.success) {
-      setGrid({});
       refreshBalance();
     }
   }
@@ -479,7 +508,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           <input placeholder="From" value={range.from} onChange={(event) => setRange((current) => ({ ...current, from: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="To" value={range.to} onChange={(event) => setRange((current) => ({ ...current, to: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="Amount" value={range.amount} onChange={(event) => setRange((current) => ({ ...current, amount: event.target.value.replace(/\D/g, '') }))} />
-          <button className="primary-button" onClick={() => addRows(buildRange(range.from, range.to, range.amount))}>Build</button>
+          <button className="primary-button" onClick={handleBuildRange}>Build</button>
         </section>
       )}
 
@@ -492,13 +521,13 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
             <option value="Yes">Joda yes</option>
             <option value="No">Joda no</option>
           </select>
-          <button className="primary-button" onClick={() => addRows(buildCross(cross.left, cross.right, cross.amount, cross.joda))}>Done</button>
+          <button className="primary-button" onClick={handleBuildCross}>Done</button>
         </section>
       )}
 
       {active === 'Entry' ? <ManualEntryRows rows={rows} setRows={setRows} draft={manualDraft} setDraft={setManualDraft} setNotice={setNotice} /> : null}
-      {active === 'Jantri' ? <JantriGrid grid={grid} setGrid={setGrid} /> : null}
-      {active !== 'Entry' && active !== 'Jantri' ? <EntryRows rows={rows} setRows={setRows} /> : null}
+      {active === 'Jantri' ? <JantriGrid grid={grid} setGrid={setGrid} onBuild={handleBuildJantri} /> : null}
+      {active !== 'Entry' ? <EntryRows rows={rows} setRows={setRows} /> : null}
 
       <div className="submit-bar">
         {notice ? <span className="notice">{notice}</span> : <span />}
@@ -507,6 +536,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           onClick={() => {
             if (active === 'Jantri') {
               setGrid({});
+              setRows([]);
             } else {
               setRows([]);
               if (active === 'Entry') setManualDraft({ number: '', amount: '' });
@@ -515,7 +545,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
         >
           Reset
         </button>
-        <button className="primary-button" onClick={active === 'Jantri' ? submitJantri : submit}>{active === 'Jantri' ? 'Submit Jantri' : 'Submit Entry'}</button>
+        <button className="primary-button" onClick={submit}>Submit Entry</button>
       </div>
     </div>
   );
