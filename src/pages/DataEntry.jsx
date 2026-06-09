@@ -393,7 +393,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     } else if (!result.rows.length) {
       setNotice('Enter Num-Akhar patterns before parsing.');
     } else {
-      setRows(result.rows);
+      setRows((current) => [...current, ...result.rows]);
       setText('');
     }
   }
@@ -405,7 +405,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       setNotice('Enter valid From-To numbers and amount before building.');
       return;
     }
-    setRows(uniqueRows(newRows));
+    setRows((current) => [...current, ...uniqueRows(newRows)]);
     setRange({ from: '', to: '', amount: '' });
   }
 
@@ -416,7 +416,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       setNotice('Enter valid Cross digits and amount before building.');
       return;
     }
-    setRows(newRows);
+    setRows((current) => [...current, ...newRows]);
     setCross({ left: '', right: '', amount: '', joda: cross.joda });
   }
 
@@ -427,7 +427,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       setNotice('Enter Jantri amounts before building.');
       return;
     }
-    setRows(newRows);
+    setRows((current) => [...current, ...newRows]);
     setGrid({});
   }
 
