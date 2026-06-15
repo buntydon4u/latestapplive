@@ -30,6 +30,89 @@ function rowAmount(row) {
     .reduce((sum, amount) => sum + Number(amount || 0), 0);
 }
 
+function buildAmountMap(rows) {
+  const map = {};
+  for (const row of rows) {
+    const numbers = String(row.trnno || '').split(',');
+    const amounts = String(row.trn_amt || '').split(',');
+    numbers.forEach((num, i) => {
+      const n = Number(num.trim());
+      if (!n) return;
+      const amt = Number((amounts[i] || amounts[0] || '0').trim()) || 0;
+      map[n] = (map[n] || 0) + amt;
+    });
+  }
+  return map;
+}
+
+function JantriGrid({ rows }) {
+  const amountMap = buildAmountMap(rows);
+
+  const grid = Array.from({ length: 10 }, (_, rowIdx) =>
+    Array.from({ length: 10 }, (_, colIdx) => {
+      const num = rowIdx * 10 + colIdx + 1;
+      return { num, amt: amountMap[num] || 0 };
+    })
+  );
+
+  const rowTotals = grid.map((row) => row.reduce((sum, cell) => sum + cell.amt, 0));
+  const colTotals = Array.from({ length: 10 }, (_, colIdx) =>
+    grid.reduce((sum, row) => sum + row[colIdx].amt, 0)
+  );
+  const grandTotal = rowTotals.reduce((sum, v) => sum + v, 0);
+
+  return (
+    <div className="jantri-grid-wrap">
+      <div className="jantri-scroll">
+        <table className="jantri-grid-table">
+          <tbody>
+            {grid.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {row.map(({ num, amt }) => (
+                  <td key={num} className={`jgcell${amt ? ' jgcell--hit' : ''}`}>
+                    <span className="jgcell-num">{num}</span>
+                    {amt ? <span className="jgcell-amt">{amt}</span> : null}
+                  </td>
+                ))}
+                <td className="jgcell jgcell--rowtotal">{rowTotals[rowIdx] || 0}</td>
+              </tr>
+            ))}
+            <tr className="jg-totals-row">
+              {colTotals.map((total, i) => (
+                <td key={i} className="jgcell jgcell--coltotal">{total}</td>
+              ))}
+              <td className="jgcell jgcell--grandtotal">{grandTotal}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="jantri-ba-table">
+          <thead>
+            <tr>
+              <th className="jgba-label"></th>
+              {Array.from({ length: 10 }, (_, i) => (
+                <th key={i} className="jgba-hcell">{i + 1}</th>
+              ))}
+              <th className="jgba-hcell">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['B', 'A'].map((label) => (
+              <tr key={label}>
+                <th className="jgba-label">{label}</th>
+                {Array.from({ length: 10 }, (_, i) => (
+                  <td key={i} className="jgba-cell"></td>
+                ))}
+                <td className="jgba-cell jgba-total">0</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function PartyJantri() {
   const { user } = useAuth();
   const [shifts, setShifts] = useState([]);
@@ -161,32 +244,9 @@ export default function PartyJantri() {
 
       <section className="transaction-card party-jantri-card">
         {loadingMeta || loadingReport ? <LoadingState label={loadingMeta ? 'Loading filters...' : 'Loading report...'} /> : (
-          <div className="transaction-table-wrap">
-            <table className="transaction-table party-jantri-table">
-              <colgroup>
-                <col className="party-jantri-sno-col" />
-                <col className="party-jantri-amount-col" />
-                <col className="party-jantri-number-col" />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>S. No.</th>
-                  <th>Amount</th>
-                  <th>Number</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, index) => (
-                  <tr key={`${row.id}-${index}`}>
-                    <td data-label="S. No.">{index + 1}</td>
-                    <td data-label="Amount">{row.trn_amt}</td>
-                    <td data-label="Number">{row.trnno}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!rows.length ? <EmptyState title="No transactions found." detail="Search with shift, party, and date to view Party Jantri rows." /> : null}
-          </div>
+          rows.length === 0
+            ? <EmptyState title="No transactions found." detail="Search with shift, party, and date to view Party Jantri rows." />
+            : <JantriGrid rows={rows} />
         )}
       </section>
     </div>
