@@ -59,3 +59,7 @@ php-dev.log
 php-dev.err.log
 vite-dev.log
 vite-dev.err.log
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
