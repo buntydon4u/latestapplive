@@ -25,7 +25,6 @@ export default function AccountProfile() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     api.getMyProfile()
       .then((result) => {
         if (!active) return;
@@ -36,16 +35,9 @@ export default function AccountProfile() {
           setNotice(result.error || 'Unable to load profile.');
         }
       })
-      .catch((error) => {
-        if (active) setNotice(error.message || 'Unable to load profile.');
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
+      .catch((err) => { if (active) setNotice(err.message || 'Unable to load profile.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   function update(field, value) {
@@ -73,9 +65,10 @@ export default function AccountProfile() {
 
     try {
       const result = await api.updateMyProfile(payload);
-      if (result.success && result.profile) {
-        setProfile(result.profile);
-        setDraft(result.profile);
+      if (result.success) {
+        const updated = result.profile || { ...profile, ...payload };
+        setProfile(updated);
+        setDraft(updated);
         setNotice('Profile updated successfully.');
       } else {
         setErrors(result.errors || {});
@@ -102,39 +95,34 @@ export default function AccountProfile() {
       <section className="panel account-card">
         {loading ? <LoadingState label="Loading profile..." /> : (
           <>
+            <div className="notice full" style={{marginBottom: '12px', opacity: 0.8}}>
+              Profile editing is not available — the server does not support this endpoint yet. Contact your administrator to update profile details.
+            </div>
             <div className="account-form-grid">
               <label>
                 <span>Party Name</span>
-                <input value={fieldValue(draft, 'ledger_name')} readOnly />
+                <input value={fieldValue(profile, 'ledger_name')} readOnly />
               </label>
               <label>
                 <span>Username</span>
-                <input value={fieldValue(draft, 'username')} readOnly />
+                <input value={fieldValue(profile, 'username')} readOnly />
               </label>
               <label>
                 <span>Real Name</span>
-                <input value={fieldValue(draft, 'real_name')} onChange={(event) => update('real_name', event.target.value)} />
-                {errors.real_name ? <small>{errors.real_name}</small> : null}
+                <input value={fieldValue(profile, 'real_name')} readOnly />
               </label>
               <label>
                 <span>Owner Name</span>
-                <input value={fieldValue(draft, 'owner_name')} onChange={(event) => update('owner_name', event.target.value)} />
-                {errors.owner_name ? <small>{errors.owner_name}</small> : null}
+                <input value={fieldValue(profile, 'owner_name')} readOnly />
               </label>
               <label>
                 <span>Mobile</span>
-                <input inputMode="numeric" value={fieldValue(draft, 'mobile')} onChange={(event) => update('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))} />
-                {errors.mobile ? <small>{errors.mobile}</small> : null}
+                <input value={fieldValue(profile, 'mobile')} readOnly />
               </label>
               <label className="account-wide">
                 <span>Address</span>
-                <textarea value={fieldValue(draft, 'address')} onChange={(event) => update('address', event.target.value)} />
-                {errors.address ? <small>{errors.address}</small> : null}
+                <textarea value={fieldValue(profile, 'address')} readOnly />
               </label>
-            </div>
-            <div className="account-actions">
-              <button className="primary-button" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-              <button className="secondary-button" onClick={reset} disabled={saving}>Reset</button>
             </div>
           </>
         )}

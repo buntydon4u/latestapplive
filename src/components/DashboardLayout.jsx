@@ -12,7 +12,6 @@ const drawerItems = [
   { id: 'hisab', label: 'Hisab Report' },
   { id: 'statement', label: 'Statement' },
   { type: 'section', label: 'Account' },
-  { id: 'accountProfile', label: 'Profile' },
   { id: 'changePassword', label: 'Change Password' }
 ];
 

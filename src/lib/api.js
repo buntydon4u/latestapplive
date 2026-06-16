@@ -191,14 +191,23 @@ export const api = {
     };
   },
   getMyProfile: async () => {
-    const result = await request('account/profile');
-    return { ...result, profile: result.profile || null };
+    const result = await request('me');
+    const raw = result.user || result.data || result;
+    const profile = {
+      ledger_name: raw.ledger_name || raw.name || '',
+      username: raw.username || raw.user || '',
+      real_name: raw.real_name || '',
+      owner_name: raw.owner_name || '',
+      mobile: raw.mobile || '',
+      address: raw.address || ''
+    };
+    return { ...result, success: result.success || result.logged_in, profile };
   },
   updateMyProfile: async (body) => {
     const result = await request('account/profile', { method: 'PUT', body });
     return { ...result, profile: result.profile || null };
   },
-  changeMyPassword: (body) => request('account/change-password', { method: 'PUT', body }),
+  changeMyPassword: (body) => request('account/change-password', { method: 'POST', body }),
   submitTransaction: (body) => request('transactions', { method: 'POST', body }),
   submitJantri: (body) => request('jantri', { method: 'POST', body }),
   deleteTransaction: (id) => request(`transactions/${id}`, { method: 'DELETE' })
