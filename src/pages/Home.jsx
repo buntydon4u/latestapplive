@@ -174,10 +174,6 @@ export default function Home({ onNavigate, onPlayShift }) {
           <span>Total Shifts</span>
         </article>
         <article>
-          <b>{dashboardData.transactions.length}</b>
-          <span>Entries</span>
-        </article>
-        <article>
           <b>{dashboardData.declaredResults.length}</b>
           <span>Results</span>
         </article>
