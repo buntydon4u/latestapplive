@@ -148,6 +148,7 @@ export default function Home({ onNavigate, onPlayShift }) {
   const markets = useMemo(() => {
     return dashboardData.shifts
       .map(normalizeMarket)
+      .filter((market) => market.isOpen)
       .sort((left, right) => left.sortValue - right.sortValue || left.name.localeCompare(right.name));
   }, [dashboardData.shifts]);
 
