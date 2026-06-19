@@ -1,4 +1,4 @@
-const API_ROOT = 'https://new.555xch.pro/index.php/api/v1';
+const API_ROOT = import.meta.env.VITE_API_ROOT || '/index.php/api/v1';
 
 const TOKEN_KEY = 'ci3_api_token';
 const PARENT_TOKEN_KEY = 'ci3_parent_selection_token';
@@ -204,7 +204,7 @@ export const api = {
     return { ...result, success: result.success || result.logged_in, profile };
   },
   updateMyProfile: async (body) => {
-    const result = await request('account/profile', { method: 'PUT', body });
+    const result = await request('account/profile', { method: 'POST', body });
     return { ...result, profile: result.profile || null };
   },
   changeMyPassword: (body) => request('account/change-password', { method: 'POST', body }),

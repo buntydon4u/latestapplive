@@ -27,8 +27,10 @@ $route['api/v1/balance']['get'] = 'api/v1/Ledgers/balance';
 $route['api/v1/balance']['options'] = 'api/v1/Ledgers/balance';
 
 $route['api/v1/account/profile']['get'] = 'api/v1/Account/profile';
+$route['api/v1/account/profile']['post'] = 'api/v1/Account/profile';
 $route['api/v1/account/profile']['put'] = 'api/v1/Account/profile';
 $route['api/v1/account/profile']['options'] = 'api/v1/Account/profile';
+$route['api/v1/account/change-password']['post'] = 'api/v1/Account/change_password';
 $route['api/v1/account/change-password']['put'] = 'api/v1/Account/change_password';
 $route['api/v1/account/change-password']['options'] = 'api/v1/Account/change_password';
 

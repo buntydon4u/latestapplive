@@ -16,11 +16,13 @@ class Account extends Api_Controller
         $payload = $this->require_ledger_auth();
         $ledger_id = (int) $payload['user_id'];
 
-        if ($this->input->method(TRUE) === 'GET') {
+        $method = $this->input->method(TRUE);
+
+        if ($method === 'GET') {
             return $this->show_profile($ledger_id);
         }
 
-        if ($this->input->method(TRUE) === 'PUT') {
+        if ($method === 'POST' || $method === 'PUT') {
             return $this->update_profile($ledger_id);
         }
 
@@ -29,7 +31,10 @@ class Account extends Api_Controller
 
     public function change_password()
     {
-        $this->require_method('PUT');
+        $method = $this->input->method(TRUE);
+        if ($method !== 'POST' && $method !== 'PUT') {
+            return $this->error('Method not allowed', 405);
+        }
         $payload = $this->require_ledger_auth();
         $ledger_id = (int) $payload['user_id'];
 
@@ -43,11 +48,7 @@ class Account extends Api_Controller
         $new_password = isset($this->request_data['newPassword']) ? (string) $this->request_data['newPassword'] : '';
         $confirm_password = isset($this->request_data['confirmPassword']) ? (string) $this->request_data['confirmPassword'] : '';
 
-        if ($new_password !== '' && strlen($new_password) < 6) {
-            $errors['newPassword'] = 'New password must be at least 6 characters';
-        }
-
-        if ($new_password !== '' && $confirm_password !== '' && $new_password !== $confirm_password) {
+if ($new_password !== '' && $confirm_password !== '' && $new_password !== $confirm_password) {
             $errors['confirmPassword'] = 'New password and confirm password must match';
         }
 
