@@ -2569,16 +2569,30 @@ footer {
 .result-card-body {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .result-card strong {
   color: var(--premium-gold);
-  font-size: 2rem;
+  font-size: 1.8rem;
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.result-waiting {
+  color: var(--text-muted, #888) !important;
+  font-size: 1rem !important;
+  opacity: 0.7;
+  animation: pulse-wait 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-wait {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .premium-empty {
@@ -2731,7 +2745,7 @@ footer {
   }
 
   .result-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

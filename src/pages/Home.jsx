@@ -66,7 +66,59 @@ function getResultValue(row) {
 }
 
 function getResultDate(row) {
-  return row.open_date || row.date_parsed || row.date || row.t_date || '';
+  // declared_date is set by backend from tbl_openno's own date, not shift schedule date
+  return row.declared_date || row.t_date || row.date || row.date_parsed || '';
+}
+
+function getISTNow() {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + 5.5 * 60 * 60000);
+}
+
+function getTodayISTString() {
+  const ist = getISTNow();
+  return `${ist.getFullYear()}-${String(ist.getMonth() + 1).padStart(2, '0')}-${String(ist.getDate()).padStart(2, '0')}`;
+}
+
+function isBeforeResetTime() {
+  const ist = getISTNow();
+  return ist.getHours() < 10;
+}
+
+function normalizeToISODate(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // DD-MM-YYYY
+  const dmy = s.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  // Try native parse
+  const d = new Date(s);
+  if (!Number.isNaN(d.getTime())) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  return '';
+}
+
+function isResultFromToday(row) {
+  const raw = getResultDate(row);
+  const normalized = normalizeToISODate(raw);
+  return normalized === getTodayISTString();
+}
+
+function getResultSortTime(row) {
+  const raw = row.open_time || row.result_time || row.close_time || row.shift_time || '';
+  if (!raw) return Infinity;
+  const match = String(raw).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (!match) return Infinity;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = (match[4] || '').toLowerCase();
+  if (meridiem === 'pm' && hours !== 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
 }
 
 function GameMarketCard({ market, transaction, onPlay }) {
@@ -93,16 +145,25 @@ function GameMarketCard({ market, transaction, onPlay }) {
   );
 }
 
-function DeclaredResultCard({ result }) {
+function DeclaredResultCard({ shift, result }) {
+  const value = result ? getResultValue(result) : null;
+  const hasResult = value && value !== '--';
+
+  // Before 10am: show previous result if available
+  // After 10am: force Awaiting unless today's fresh result is declared
+  const afterReset = !isBeforeResetTime();
+  const waiting = afterReset ? (!hasResult || !isResultFromToday(result)) : !hasResult;
+
   return (
     <article className="result-card">
       <div className="result-card-header">
-        <h3>{result.shift_name || result.market_name || 'Result'}</h3>
-        <p>{formatDate(getResultDate(result))}</p>
+        <h3>{shift.name}</h3>
       </div>
       <div className="result-card-body">
-        <strong>{getResultValue(result)}</strong>
-        <StatusBadge open label="Declared" />
+        {waiting
+          ? <strong className="result-waiting">⏳ Awaiting</strong>
+          : <strong>{value}</strong>
+        }
       </div>
     </article>
   );
@@ -163,7 +224,25 @@ export default function Home({ onNavigate, onPlayShift }) {
   }, [dashboardData.transactions]);
 
   const gameRate = markets.find((market) => market.rate)?.rate || 10;
-  const latestResults = dashboardData.declaredResults;
+
+  // Build a lookup of declared results by shift name and master_shift_id
+  const resultByShift = useMemo(() => {
+    const map = new Map();
+    dashboardData.declaredResults.forEach((r) => {
+      const key = String(r.master_shift_id || r.shift_id || '');
+      const nameKey = String(r.shift_name || '').toLowerCase();
+      if (key) map.set(key, r);
+      if (nameKey) map.set(nameKey, r);
+    });
+    return map;
+  }, [dashboardData.declaredResults]);
+
+  // All shifts sorted by time — used as the base list for Live Results
+  const allShiftsSorted = useMemo(() => {
+    return dashboardData.shifts
+      .map(normalizeMarket)
+      .sort((a, b) => a.sortValue - b.sortValue || a.name.localeCompare(b.name));
+  }, [dashboardData.shifts]);
 
   return (
     <div className="premium-page dashboard-page">
@@ -206,17 +285,21 @@ export default function Home({ onNavigate, onPlayShift }) {
       <section className="live-results-section">
         <h2>Live Results</h2>
         {loading ? <LoadingState label="Loading results..." /> : null}
-        {!loading && latestResults.length ? (
+        {!loading && allShiftsSorted.length ? (
           <div className="result-grid">
-            {latestResults.map((result, index) => (
-              <DeclaredResultCard key={result.id || `${result.date || result.t_date || 'result'}-${index}`} result={result} />
-            ))}
+            {allShiftsSorted.map((shift) => {
+              const result = resultByShift.get(String(shift.masterShiftId))
+                || resultByShift.get(shift.name.toLowerCase());
+              return (
+                <DeclaredResultCard key={shift.id} shift={shift} result={result} />
+              );
+            })}
           </div>
         ) : null}
-        {!loading && !latestResults.length ? (
+        {!loading && !allShiftsSorted.length ? (
           <EmptyState
-            title="No declared results found."
-            detail="No rows were returned by the latest declared results API."
+            title="No shifts found."
+            detail="No shifts were returned by the shifts API."
           />
         ) : null}
       </section>
