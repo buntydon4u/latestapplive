@@ -297,7 +297,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
 
 function JantriGrid({ grid, setGrid, onBuild }) {
   const refs = useRef([]);
-  const numbers = useMemo(() => Array.from({ length: 100 }, (_, index) => String(index).padStart(2, '0')), []);
+  const numbers = useMemo(() => [...Array.from({ length: 99 }, (_, index) => String(index + 1).padStart(2, '0')), '00'], []);
   const total = Object.values(grid).reduce((sum, value) => sum + Number(value || 0), 0);
 
   function update(number, value) {
@@ -333,7 +333,7 @@ function JantriGrid({ grid, setGrid, onBuild }) {
           </label>
         ))}
       </div>
-      <button className="primary-button" onClick={onBuild}>Build</button>
+      <button className="primary-button" onClick={onBuild}>Done</button>
     </section>
   );
 }
@@ -395,6 +395,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     } else {
       setRows((current) => [...current, ...result.rows]);
       setText('');
+      setActive('Entry');
     }
   }
 
@@ -407,6 +408,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     }
     setRows((current) => [...current, ...uniqueRows(newRows)]);
     setRange({ from: '', to: '', amount: '' });
+    setActive('Entry');
   }
 
   function handleBuildCross() {
@@ -418,6 +420,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     }
     setRows((current) => [...current, ...newRows]);
     setCross({ left: '', right: '', amount: '', joda: cross.joda });
+    setActive('Entry');
   }
 
   function handleBuildJantri() {
@@ -429,6 +432,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     }
     setRows((current) => [...current, ...newRows]);
     setGrid({});
+    setActive('Entry');
   }
 
   async function submit() {
@@ -508,7 +512,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           <input placeholder="From" value={range.from} onChange={(event) => setRange((current) => ({ ...current, from: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="To" value={range.to} onChange={(event) => setRange((current) => ({ ...current, to: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="Amount" value={range.amount} onChange={(event) => setRange((current) => ({ ...current, amount: event.target.value.replace(/\D/g, '') }))} />
-          <button className="primary-button" onClick={handleBuildRange}>Build</button>
+          <button className="primary-button" onClick={handleBuildRange}>Done</button>
         </section>
       )}
 
@@ -527,26 +531,22 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
       {active === 'Entry' ? <ManualEntryRows rows={rows} setRows={setRows} draft={manualDraft} setDraft={setManualDraft} setNotice={setNotice} /> : null}
       {active === 'Jantri' ? <JantriGrid grid={grid} setGrid={setGrid} onBuild={handleBuildJantri} /> : null}
-      {active !== 'Entry' ? <EntryRows rows={rows} setRows={setRows} /> : null}
 
-      <div className="submit-bar">
-        {notice ? <span className="notice">{notice}</span> : <span />}
-        <button
-          className="secondary-button"
-          onClick={() => {
-            if (active === 'Jantri') {
-              setGrid({});
+      {active === 'Entry' && (
+        <div className="submit-bar">
+          {notice ? <span className="notice">{notice}</span> : <span />}
+          <button
+            className="secondary-button"
+            onClick={() => {
               setRows([]);
-            } else {
-              setRows([]);
-              if (active === 'Entry') setManualDraft({ number: '', amount: '' });
-            }
-          }}
-        >
-          Reset
-        </button>
-        <button className="primary-button" onClick={submit}>Submit Entry</button>
-      </div>
+              setManualDraft({ number: '', amount: '' });
+            }}
+          >
+            Reset
+          </button>
+          <button className="primary-button" onClick={submit}>Submit Entry</button>
+        </div>
+      )}
     </div>
   );
 }

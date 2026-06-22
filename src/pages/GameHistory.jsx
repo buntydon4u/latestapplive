@@ -146,13 +146,15 @@ export default function GameHistory() {
                 >
                   View
                 </button>
-                <button
-                  className="action-btn delete-btn"
-                  onClick={() => handleDelete(transaction)}
-                  disabled={deletingId === transaction.id}
-                >
-                  {deletingId === transaction.id ? '…' : 'Delete'}
-                </button>
+                {transaction.can_delete ? (
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={() => handleDelete(transaction)}
+                    disabled={deletingId === transaction.id}
+                  >
+                    {deletingId === transaction.id ? '…' : 'Delete'}
+                  </button>
+                ) : null}
               </div>
             </article>
           ))}
