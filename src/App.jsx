@@ -5,7 +5,8 @@ import ParentSelection from './pages/ParentSelection.jsx';
 import DashboardLayout from './components/DashboardLayout.jsx';
 import DataEntry from './pages/DataEntry.jsx';
 import ViewResults from './pages/ViewResults.jsx';
-import Reports from './pages/Reports.jsx';
+import Hisab from './pages/Hisab.jsx';
+import Statement from './pages/Statement.jsx';
 import Home from './pages/Home.jsx';
 import Wallet from './pages/Wallet.jsx';
 import GameHistory from './pages/GameHistory.jsx';
@@ -65,8 +66,8 @@ function AppRoutes() {
     cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
     jantri: PartyJantri,
     results: ViewResults,
-    hisab: () => <Reports initialView="hisab" />,
-    statement: () => <Reports initialView="statement" />,
+    hisab: Hisab,
+    statement: Statement,
     accountProfile: AccountProfile,
     changePassword: ChangePassword
   };

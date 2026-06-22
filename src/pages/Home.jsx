@@ -108,6 +108,25 @@ function isResultFromToday(row) {
   return normalized === getTodayISTString();
 }
 
+function parseTimeToMinutes(raw) {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  const match = s.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = (match[3] || '').toLowerCase();
+  if (meridiem === 'pm' && hours !== 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+function isShiftClosedByTime(market, nowMinutes) {
+  const closeMinutes = parseTimeToMinutes(market.closeTime);
+  if (closeMinutes === null) return !market.isOpen;
+  return nowMinutes >= closeMinutes;
+}
+
 function getResultSortTime(row) {
   const raw = row.open_time || row.result_time || row.close_time || row.shift_time || '';
   if (!raw) return Infinity;
@@ -178,6 +197,19 @@ export default function Home({ onNavigate, onPlayShift }) {
     ledger: null
   });
   const [loading, setLoading] = useState(true);
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const ist = getISTNow();
+    return ist.getHours() * 60 + ist.getMinutes();
+  });
+
+  useEffect(() => {
+    const tick = () => {
+      const ist = getISTNow();
+      setNowMinutes(ist.getHours() * 60 + ist.getMinutes());
+    };
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -206,12 +238,19 @@ export default function Home({ onNavigate, onPlayShift }) {
     return () => { alive = false; };
   }, [refreshBalance, user?.id]);
 
-  const markets = useMemo(() => {
+  const allNormalizedShifts = useMemo(() => {
     return dashboardData.shifts
       .map(normalizeMarket)
-      .filter((market) => market.isOpen)
-      .sort((left, right) => left.sortValue - right.sortValue || left.name.localeCompare(right.name));
+      .sort((a, b) => a.sortValue - b.sortValue || a.name.localeCompare(b.name));
   }, [dashboardData.shifts]);
+
+  const markets = useMemo(() => {
+    return allNormalizedShifts.filter((market) => !isShiftClosedByTime(market, nowMinutes));
+  }, [allNormalizedShifts, nowMinutes]);
+
+  const closedShifts = useMemo(() => {
+    return allNormalizedShifts.filter((market) => isShiftClosedByTime(market, nowMinutes));
+  }, [allNormalizedShifts, nowMinutes]);
 
   const transactionByShift = useMemo(() => {
     const map = new Map();
@@ -237,12 +276,6 @@ export default function Home({ onNavigate, onPlayShift }) {
     return map;
   }, [dashboardData.declaredResults]);
 
-  // All shifts sorted by time — used as the base list for Live Results
-  const allShiftsSorted = useMemo(() => {
-    return dashboardData.shifts
-      .map(normalizeMarket)
-      .sort((a, b) => a.sortValue - b.sortValue || a.name.localeCompare(b.name));
-  }, [dashboardData.shifts]);
 
   return (
     <div className="premium-page dashboard-page">
@@ -282,12 +315,11 @@ export default function Home({ onNavigate, onPlayShift }) {
         ) : null}
       </section>
 
-      <section className="live-results-section">
-        <h2>Live Results</h2>
-        {loading ? <LoadingState label="Loading results..." /> : null}
-        {!loading && allShiftsSorted.length ? (
+      {!loading && closedShifts.length > 0 ? (
+        <section className="live-results-section">
+          <h2>Live Results</h2>
           <div className="result-grid">
-            {allShiftsSorted.map((shift) => {
+            {closedShifts.map((shift) => {
               const result = resultByShift.get(String(shift.masterShiftId))
                 || resultByShift.get(shift.name.toLowerCase());
               return (
@@ -295,14 +327,8 @@ export default function Home({ onNavigate, onPlayShift }) {
               );
             })}
           </div>
-        ) : null}
-        {!loading && !allShiftsSorted.length ? (
-          <EmptyState
-            title="No shifts found."
-            detail="No shifts were returned by the shifts API."
-          />
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }
