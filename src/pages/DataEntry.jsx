@@ -43,7 +43,7 @@ function cleanWhatsAppText(rawText) {
   return String(rawText || '')
     .split('\n')
     .map((line) => line
-      .replace(/^\[\d{1,2}:\d{2}\s*(am|pm),\s*\d{1,2}\/\d{1,2}\/\d{4}\]\s*.*?:\s*/i, '')
+      .replace(/^\[[^\]]+\]\s*[^:]+:\s*/i, '')
       .replace(/>{2,}/g, '')
       .replace(/[\/.]/g, ',')
       .replace(/\*{2,}/g, '*')
@@ -70,9 +70,16 @@ function normalizeAkharNumber(token) {
   if (!value) return { error: 'Number is missing.' };
   if (value === '100') return { number: '00' };
 
+  // Support short AB notations (e.g. A1 -> 1111, 1B -> 111)
   if (/^[AB]\d$|^\d[AB]$/.test(value)) {
     const digit = value.replace(/[AB]/g, '');
     return { number: digit.repeat(value.includes('A') ? 4 : 3) };
+  }
+
+  // Support legacy A-prefixed 3-digit tokens (e.g. A111 -> 1111, A222 -> 2222)
+  if (/^A(\d)\1{2}$/.test(value)) {
+    const digit = value[1];
+    return { number: digit.repeat(4) };
   }
 
   if (!/^\d+$/.test(value)) {
@@ -122,23 +129,54 @@ function parseNumAkhar(text) {
   const rows = [];
   const errors = [];
 
-  for (const line of cleanedText.split('\n')) {
-    const expressions = [...line.matchAll(akharExpressionPattern)];
-    if (!expressions.length) {
-      if (line.trim()) errors.push(`Invalid pattern: ${line.trim()}`);
-      continue;
+  // Split into lines and process each
+  for (let line of cleanedText.split('\n')) {
+    line = line.trim();
+    if (!line) continue;
+    
+    // Try to match multiple comma-separated amount pairs: 20,28*100,29,74*50
+    // Split by comma, then find which items are amounts (preceded by numbers)
+    const items = line.split(',').map((item) => item.trim());
+    let currentNumbers = [];
+    
+    for (const item of items) {
+      if (item.includes('*')) {
+        // This item has an amount
+        const [numsStr, amountStr] = item.split('*');
+        
+        // Add any number from this item before the *
+        if (numsStr.trim()) {
+          currentNumbers.push(numsStr.trim());
+        }
+        
+        // Process accumulated numbers with this amount
+        const amount = Number(String(amountStr || '').replace(/\D/g, ''));
+        if (Number.isFinite(amount) && amount > 0) {
+          for (const token of currentNumbers) {
+            const result = normalizeAkharNumber(token);
+            if (result.error) {
+              errors.push(result.error);
+            } else {
+              rows.push({ number: result.number, amount });
+            }
+          }
+          currentNumbers = [];
+        } else {
+          errors.push(`Invalid amount: ${amountStr}`);
+        }
+      } else {
+        // This is just a number, accumulate it
+        if (item && /^\d+[AB]?|[AB]\d+$/.test(item)) {
+          currentNumbers.push(item);
+        } else if (item) {
+          errors.push(`Invalid number format: ${item}`);
+        }
+      }
     }
-
-    let unmatched = line;
-    for (const match of expressions) {
-      unmatched = unmatched.replace(match[0], '');
-      const result = parseAkharExpression(match[0]);
-      rows.push(...result.rows);
-      errors.push(...result.errors);
-    }
-
-    if (unmatched.replace(/[\s,;]+/g, '').trim()) {
-      errors.push(`Invalid pattern: ${line.trim()}`);
+    
+    // If there are remaining numbers without an amount, that's an error
+    if (currentNumbers.length) {
+      errors.push(`Numbers without amount: ${currentNumbers.join(',')}`);
     }
   }
 
