@@ -127,6 +127,12 @@ function isShiftClosedByTime(market, nowMinutes) {
   return nowMinutes >= closeMinutes;
 }
 
+function isShiftFromToday(market) {
+  const shiftDate = normalizeToISODate(market.openDate);
+  const todayDate = getTodayISTString();
+  return shiftDate === todayDate;
+}
+
 function getResultSortTime(row) {
   const raw = row.open_time || row.result_time || row.close_time || row.shift_time || '';
   if (!raw) return Infinity;
@@ -245,11 +251,38 @@ export default function Home({ onNavigate, onPlayShift }) {
   }, [dashboardData.shifts]);
 
   const markets = useMemo(() => {
-    return allNormalizedShifts.filter((market) => !isShiftClosedByTime(market, nowMinutes));
+    // Show shifts from today that haven't closed by time
+    const openShifts = allNormalizedShifts.filter((market) => 
+      isShiftFromToday(market) && !isShiftClosedByTime(market, nowMinutes)
+    );
+    
+    // Always add Disawar at the end if it exists (ignore date filter for Disawar)
+    const disawarShift = allNormalizedShifts.find((market) => /disawar|disawer/i.test(market.name));
+    if (disawarShift && !openShifts.find((m) => m.id === disawarShift.id)) {
+      openShifts.push(disawarShift);
+    }
+    
+    return openShifts;
   }, [allNormalizedShifts, nowMinutes]);
 
   const closedShifts = useMemo(() => {
-    return allNormalizedShifts.filter((market) => isShiftClosedByTime(market, nowMinutes));
+    // Get all closed shifts except Disawar
+    const nonDisawarClosed = allNormalizedShifts.filter((market) => 
+      !/disawar|disawer/i.test(market.name) && isShiftClosedByTime(market, nowMinutes)
+    );
+    
+    // Get non-Disawar open shifts (still betting)
+    const nonDisawarOpen = allNormalizedShifts.filter((market) => 
+      !/disawar|disawer/i.test(market.name) && !isShiftClosedByTime(market, nowMinutes)
+    );
+    
+    // Only add Disawar to results when all other non-Disawar shifts are closed
+    const disawarShift = allNormalizedShifts.find((market) => /disawar|disawer/i.test(market.name));
+    if (disawarShift && nonDisawarOpen.length === 0 && isShiftClosedByTime(disawarShift, nowMinutes)) {
+      nonDisawarClosed.push(disawarShift);
+    }
+    
+    return nonDisawarClosed;
   }, [allNormalizedShifts, nowMinutes]);
 
   const transactionByShift = useMemo(() => {

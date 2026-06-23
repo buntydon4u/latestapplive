@@ -417,6 +417,13 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     return shifts.find((shift) => String(shift.id) === String(meta.shift))?.expired;
   }
 
+  // Reorder shifts to put Disawar at the end (always available, not date-filtered)
+  const orderedShifts = useMemo(() => {
+    const disawar = shifts.find((shift) => /disawar|disawer/i.test(shift.name || ''));
+    const others = shifts.filter((shift) => !/disawar|disawer/i.test(shift.name || ''));
+    return disawar ? [...others, disawar] : shifts;
+  }, [shifts]);
+
   function getManualDraftRow() {
     const number = sanitizeEntryNumber(manualDraft.number);
     const amount = manualDraft.amount.replace(/\D/g, '');
@@ -525,7 +532,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           <span>Shift</span>
           <select value={meta.shift} onChange={(event) => setMeta((current) => ({ ...current, shift: event.target.value }))}>
             <option value="">Choose shift</option>
-            {shifts.map((shift) => <option key={`${shift.id}-${shift.open_date}`} value={shift.id} disabled={shift.expired}>{shift.name} {shift.expired ? '(expired)' : ''}</option>)}
+            {orderedShifts.map((shift) => <option key={`${shift.id}-${shift.open_date}`} value={shift.id} disabled={shift.expired}>{shift.name} {shift.expired ? '(expired)' : ''}</option>)}
           </select>
         </label>
       </section>
