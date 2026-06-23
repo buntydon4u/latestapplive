@@ -125,63 +125,112 @@ function parseAkharExpression(expression) {
   return { rows, errors };
 }
 
+function isInvalidAkharStatement(rawLine) {
+  const trimmed = String(rawLine || '').trim();
+  if (!trimmed) return { invalid: false };
+
+  const normalized = normalizeAkharText(trimmed)
+    .replace(/,+/g, ',')
+    .replace(/^,|,$/g, '');
+  const starCount = (normalized.match(/\*/g) || []).length;
+
+  if (starCount > 1) {
+    return { invalid: true, reason: 'More than one * connector found in the same statement.' };
+  }
+
+  if (starCount === 1) {
+    const [, right] = normalized.split('*');
+    if (!right || !/\d/.test(right)) {
+      return { invalid: true, reason: 'Amount is missing after the star connector.' };
+    }
+  }
+
+  return { invalid: false };
+}
+
+function parseNumAkharLine(line) {
+  const items = cleanWhatsAppText(line).split(',').map((item) => item.trim()).filter(Boolean);
+  const rows = [];
+  const errors = [];
+  let currentNumbers = [];
+
+  for (const item of items) {
+    if (item.includes('*')) {
+      const [numsStr, amountStr] = item.split('*');
+      if (numsStr.trim()) {
+        currentNumbers.push(numsStr.trim());
+      }
+      const amount = Number(String(amountStr || '').replace(/\D/g, ''));
+      if (Number.isFinite(amount) && amount > 0) {
+        for (const token of currentNumbers) {
+          const result = normalizeAkharNumber(token);
+          if (result.error) {
+            errors.push(result.error);
+          } else {
+            rows.push({ number: result.number, amount });
+          }
+        }
+        currentNumbers = [];
+      } else {
+        errors.push(`Invalid amount: ${amountStr}`);
+      }
+    } else {
+      if (item && /^\d+[AB]?|[AB]\d+$/.test(item)) {
+        currentNumbers.push(item);
+      } else if (item) {
+        errors.push(`Invalid number format: ${item}`);
+      }
+    }
+  }
+
+  if (currentNumbers.length) {
+    errors.push(`Numbers without amount: ${currentNumbers.join(',')}`);
+  }
+
+  return { rows, errors };
+}
+
 function parseNumAkhar(text) {
   const cleanedText = cleanWhatsAppText(text);
   const rows = [];
   const errors = [];
+  const invalidStatements = [];
+  const textLines = String(text || '').split(/\r?\n/);
+  const normalizedLines = [];
 
-  // Split into lines and process each
-  for (let line of cleanedText.split('\n')) {
-    line = line.trim();
-    if (!line) continue;
-    
-    // Try to match multiple comma-separated amount pairs: 20,28*100,29,74*50
-    // Split by comma, then find which items are amounts (preceded by numbers)
-    const items = line.split(',').map((item) => item.trim());
-    let currentNumbers = [];
-    
-    for (const item of items) {
-      if (item.includes('*')) {
-        // This item has an amount
-        const [numsStr, amountStr] = item.split('*');
-        
-        // Add any number from this item before the *
-        if (numsStr.trim()) {
-          currentNumbers.push(numsStr.trim());
-        }
-        
-        // Process accumulated numbers with this amount
-        const amount = Number(String(amountStr || '').replace(/\D/g, ''));
-        if (Number.isFinite(amount) && amount > 0) {
-          for (const token of currentNumbers) {
-            const result = normalizeAkharNumber(token);
-            if (result.error) {
-              errors.push(result.error);
-            } else {
-              rows.push({ number: result.number, amount });
-            }
-          }
-          currentNumbers = [];
-        } else {
-          errors.push(`Invalid amount: ${amountStr}`);
-        }
-      } else {
-        // This is just a number, accumulate it
-        if (item && /^\d+[AB]?|[AB]\d+$/.test(item)) {
-          currentNumbers.push(item);
-        } else if (item) {
-          errors.push(`Invalid number format: ${item}`);
-        }
-      }
+  for (let lineIndex = 0; lineIndex < textLines.length; lineIndex++) {
+    const rawLine = textLines[lineIndex];
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      normalizedLines.push('');
+      continue;
     }
-    
-    // If there are remaining numbers without an amount, that's an error
-    if (currentNumbers.length) {
-      errors.push(`Numbers without amount: ${currentNumbers.join(',')}`);
+
+    const invalidCheck = isInvalidAkharStatement(trimmed);
+    if (invalidCheck.invalid) {
+      invalidStatements.push({ lineIndex, statement: trimmed, reason: invalidCheck.reason });
+      normalizedLines.push(trimmed);
+      continue;
     }
+
+    const { rows: lineRows, errors: lineErrors } = parseNumAkharLine(trimmed);
+
+    if (lineErrors.length) {
+      invalidStatements.push({ lineIndex, statement: trimmed, reason: lineErrors.join(' ') });
+      normalizedLines.push(trimmed);
+      continue;
+    }
+
+    rows.push(...lineRows);
+    normalizedLines.push(normalizeAkharText(trimmed));
   }
 
-  return { rows: uniqueRows(rows), cleanedText: normalizeAkharText(cleanedText), errors: [...new Set(errors)] };
+  return {
+    rows: uniqueRows(rows),
+    cleanedText: normalizedLines.join('\n'),
+    errors: [...new Set(errors)],
+    invalidStatements,
+  };
 }
 
 function buildRange(from, to, amount) {
@@ -389,6 +438,8 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
   const [manualDraft, setManualDraft] = useState({ number: '', amount: '' });
   const [grid, setGrid] = useState({});
   const [notice, setNotice] = useState('');
+  const [invalidNumAkharStatements, setInvalidNumAkharStatements] = useState([]);
+  const numAkharTextareaRef = useRef(null);
   const ledgerId = user?.id;
   const currentDateDisplay = todayDisplay();
 
@@ -430,19 +481,44 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     return number && amount ? { number: normalizeEntryNumber(number), amount } : null;
   }
 
+  function scrollToInvalidStatement({ lineIndex }) {
+    if (!numAkharTextareaRef.current) return;
+    const lines = String(text || '').split(/\r?\n/);
+    let start = 0;
+    for (let index = 0; index < lineIndex; index += 1) {
+      start += lines[index].length + 1;
+    }
+    const end = start + (lines[lineIndex]?.length || 0);
+    numAkharTextareaRef.current.focus();
+    numAkharTextareaRef.current.setSelectionRange(start, end);
+  }
+
   function handleParseNumAkhar() {
     setNotice('');
     const result = parseNumAkhar(text);
+    setInvalidNumAkharStatements(result.invalidStatements || []);
+
+    if (result.invalidStatements.length) {
+      if (result.cleanedText) setText(result.cleanedText);
+      setNotice('Found invalid Num-Akhar patterns. Click an item to jump to the statement.');
+      return;
+    }
+
     if (result.errors.length) {
       if (result.cleanedText) setText(result.cleanedText);
       setNotice(result.errors[0]);
-    } else if (!result.rows.length) {
-      setNotice('Enter Num-Akhar patterns before parsing.');
-    } else {
-      setRows((current) => [...current, ...result.rows]);
-      setText('');
-      setActive('Entry');
+      return;
     }
+
+    if (!result.rows.length) {
+      setNotice('Enter Num-Akhar patterns before parsing.');
+      return;
+    }
+
+    setRows((current) => [...current, ...result.rows]);
+    setText('');
+    setInvalidNumAkharStatements([]);
+    setActive('Entry');
   }
 
   function handleBuildRange() {
@@ -544,12 +620,31 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       {active === 'Num-Akhar' && (
         <section className="panel form-panel">
           <textarea
+            ref={numAkharTextareaRef}
             value={text}
             onBlur={() => setText((current) => normalizeAkharText(current))}
             onChange={(event) => setText(event.target.value)}
             placeholder="Example: 1,2,3*10 or 11,22(100)"
           />
           <button className="primary-button" onClick={handleParseNumAkhar}>Done</button>
+
+          {invalidNumAkharStatements.length > 0 && (
+            <div className="invalid-statements-panel">
+              <div className="panel-title">
+                <h4>Invalid Num-Akhar statements</h4>
+              </div>
+              <ul className="invalid-statements-list">
+                {invalidNumAkharStatements.map((item, index) => (
+                  <li key={`${item.lineIndex}-${index}`}>
+                    <button type="button" className="invalid-statement-button" onClick={() => scrollToInvalidStatement(item)}>
+                      {item.statement}
+                    </button>
+                    <span>{item.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

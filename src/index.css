@@ -360,6 +360,46 @@ input:focus, select:focus, textarea:focus {
   width: 100%;
 }
 
+.invalid-statements-panel {
+  margin-top: 1rem;
+  border: 1px solid hsl(0 72% 48% / 0.2);
+  border-radius: 8px;
+  background: hsl(0 72% 48% / 0.06);
+  padding: 1rem;
+}
+
+.invalid-statements-panel .panel-title {
+  margin-bottom: 0.75rem;
+}
+
+.invalid-statements-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.invalid-statement-button {
+  all: unset;
+  cursor: pointer;
+  color: var(--danger);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.invalid-statement-button:hover,
+.invalid-statement-button:focus {
+  color: hsl(0 72% 48% / 1);
+}
+
+.invalid-statements-list span {
+  display: block;
+  color: hsl(0 72% 48% / 0.9);
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}
+
 .selection-page {
   align-content: center;
 }
