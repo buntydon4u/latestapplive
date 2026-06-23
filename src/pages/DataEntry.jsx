@@ -57,7 +57,8 @@ function normalizeAkharText(rawText) {
     .toUpperCase()
     .replace(/\b(INTO|INTU|IN)\b/g, '*')
     .replace(/[=X\u00d7(]/g, '*')
-    .replace(/\)/g, '')
+    // Insert newline after any closing bracket so each statement ends on its own line
+    .replace(/[\)\]\}]/g, '\n')
     .replace(/[!@#$%^&_\-/|. \t\r]+/g, ',')
     .replace(/,+/g, ',')
     .replace(/,\*/g, '*')
