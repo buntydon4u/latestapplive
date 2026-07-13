@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -7,7 +8,48 @@ export default defineConfig(({ mode }) => {
   const remoteApi = env.VITE_REMOTE_API || 'https://new.555xch.pro';
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        manifest: {
+          name: 'XCH555',
+          short_name: 'XCH555',
+          description: 'XCH555 web application',
+          theme_color: '#111111',
+          background_color: '#111111',
+          display: 'standalone',
+          orientation: 'portrait',
+          start_url: '/',
+          scope: '/',
+          prefer_related_applications: false,
+          icons: [
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
+            }
+          ]
+        },
+        workbox: {
+          cleanupOutdatedCaches: true,
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/index\.php(?:\/|$)/],
+          globPatterns: ['**/*.{js,css,html,png,svg,ico,woff,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) =>
+                url.pathname.startsWith('/api') ||
+                url.pathname.startsWith('/index.php'),
+              handler: 'NetworkOnly'
+            }
+          ]
+        }
+      })
+    ],
     server: {
       proxy: {
         '/api': {
