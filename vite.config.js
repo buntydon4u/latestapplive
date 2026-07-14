@@ -19,8 +19,10 @@ export default defineConfig(({ mode }) => {
           theme_color: '#111111',
           background_color: '#111111',
           display: 'standalone',
+          display_override: ['standalone'],
           orientation: 'portrait',
-          start_url: '/',
+          id: '/',
+          start_url: '/login',
           scope: '/',
           prefer_related_applications: false,
           icons: [

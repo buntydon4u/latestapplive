@@ -15,6 +15,7 @@ import PartyJantri from './pages/PartyJantri.jsx';
 import AccountProfile from './pages/AccountProfile.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
 import WebPhoneFrame from './components/WebPhoneFrame.jsx';
+import InstallGate from './components/InstallGate.jsx';
 
 const pagePaths = {
   home: '/',
@@ -116,10 +117,12 @@ export default function App() {
   }, [prefersDark]);
 
   return (
-    <WebPhoneFrame>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </WebPhoneFrame>
+    <InstallGate>
+      <WebPhoneFrame>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </WebPhoneFrame>
+    </InstallGate>
   );
 }

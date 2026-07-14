@@ -3037,3 +3037,156 @@ footer {
   border-top: 1.5px solid var(--premium-gold-dark, #8b7536);
   border-bottom: none;
 }
+
+.install-gate {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(230, 145, 0, 0.22), transparent 38%),
+    linear-gradient(145deg, #090909, #17120a 55%, #080808);
+}
+
+.install-card {
+  width: min(100%, 440px);
+  min-height: 570px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 38px 30px;
+  text-align: center;
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  border-radius: 28px;
+  background: rgba(18, 18, 18, 0.94);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+}
+
+.install-logo {
+  width: 108px;
+  height: 108px;
+  margin-bottom: 28px;
+  border-radius: 24px;
+  box-shadow: 0 14px 36px rgba(230, 145, 0, 0.2);
+}
+
+.install-eyebrow {
+  margin: 0 0 10px;
+  color: #e69100;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.install-card h1 {
+  margin: 0;
+  color: #ffcc00;
+  font-size: clamp(1.7rem, 7vw, 2.25rem);
+  line-height: 1.12;
+}
+
+.install-copy {
+  max-width: 330px;
+  margin: 16px 0 26px;
+  color: #c8d2df;
+  line-height: 1.6;
+}
+
+.install-primary,
+.install-secondary {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.install-primary {
+  border: 0;
+  color: #fff;
+  background: #e69100;
+  box-shadow: 0 10px 28px rgba(230, 145, 0, 0.22);
+}
+
+.install-secondary {
+  margin-top: 12px;
+  border: 1px solid #8a5b06;
+  color: #ffcc00;
+  background: #242424;
+}
+
+.install-message {
+  width: 100%;
+  margin: -8px 0 18px;
+  padding: 12px;
+  color: #ffe59a;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  border: 1px solid rgba(230, 145, 0, 0.35);
+  border-radius: 10px;
+  background: rgba(230, 145, 0, 0.08);
+}
+
+.install-spinner {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 24px;
+  border: 5px solid rgba(255, 204, 0, 0.15);
+  border-top-color: #ffcc00;
+  border-radius: 50%;
+  animation: install-spin 0.8s linear infinite;
+}
+
+.install-progress {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #292929;
+}
+
+.install-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffffff 0%, #d9ffe3 32%, #65dd83 68%, #16a34a 100%);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.55);
+  animation: install-progress 5.5s linear both;
+}
+
+.install-check {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 22px;
+  color: #111;
+  font-size: 2rem;
+  font-weight: 900;
+  border-radius: 50%;
+  background: #ffcc00;
+}
+
+@keyframes install-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes install-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 520px) {
+  .install-gate { padding: 0; }
+  .install-card { min-height: 100dvh; border: 0; border-radius: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-spinner,
+  .install-progress span { animation-duration: 0.01ms; }
+}
