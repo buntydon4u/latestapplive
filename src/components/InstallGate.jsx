@@ -15,9 +15,6 @@ export default function InstallGate({ children }) {
   const [stage, setStage] = useState('landing');
   const [installed, setInstalled] = useState(isStandalone);
   const [message, setMessage] = useState('');
-  const [continueToApp, setContinueToApp] = useState(
-    () => isStandalone() || sessionStorage.getItem('xch555-onboarding-complete') === 'true'
-  );
 
   useEffect(() => {
     function handleBeforeInstallPrompt(event) {
@@ -28,7 +25,7 @@ export default function InstallGate({ children }) {
     function handleInstalled() {
       setInstalled(true);
       setStage('ready');
-      setMessage('XCH555 was installed successfully and is ready to open.');
+      setMessage('Close this browser tab and launch XCH555 from its new home-screen icon.');
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -61,18 +58,13 @@ export default function InstallGate({ children }) {
 
     if (choice.outcome === 'accepted') {
       setInstalled(true);
-      setMessage('XCH555 was installed successfully and is ready to open.');
+      setMessage('Close this browser tab and launch XCH555 from its new home-screen icon.');
     } else {
       setMessage('Installation was not completed. Confirm installation to finish setup.');
     }
   }
 
-  function openLogin() {
-    sessionStorage.setItem('xch555-onboarding-complete', 'true');
-    setContinueToApp(true);
-  }
-
-  if (continueToApp) return children;
+  if (isStandalone()) return children;
 
   return (
     <main className="install-gate">
@@ -112,9 +104,6 @@ export default function InstallGate({ children }) {
                 Confirm Installation
               </button>
             )}
-            <button className="install-secondary" type="button" onClick={openLogin}>
-              Open XCH555
-            </button>
           </>
         )}
       </section>
