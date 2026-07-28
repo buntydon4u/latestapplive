@@ -159,17 +159,12 @@ export default function DashboardLayout({ children, activePage, onNavigate }) {
               <div className="premium-drawer-user">
                 <b>{user?.name || 'User'}</b>
                 <span>Authenticated</span>
-                {parentSelection ? (
-                  <button className="switch-account-action" onClick={handleSwitchAccount} type="button">
-                    Switch account
-                  </button>
-                ) : null}
               </div>
               <button className="header-icon" onClick={() => setDrawerOpen(false)} type="button">X</button>
             </div>
             <div className="premium-drawer-list">
               {parentSelection ? (
-                <button className="switch-account-action mobile-switch-account" onClick={handleSwitchAccount} type="button">
+                <button className="switch-account-action drawer-switch-account" onClick={handleSwitchAccount} type="button">
                   Switch account
                 </button>
               ) : null}
