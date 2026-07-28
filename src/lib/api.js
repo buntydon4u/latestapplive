@@ -116,10 +116,17 @@ export const api = {
 
     if (result.success && result.token) {
       setToken(result.token);
-      setParentToken('');
     }
 
     return result;
+  },
+
+  parentSession: async () => {
+    if (!getParentToken()) {
+      return { success: false, logged_in: false };
+    }
+
+    return request('me', { parentAuth: true });
   },
 
   session: async () => {

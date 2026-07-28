@@ -312,7 +312,7 @@ export default function Home({ onNavigate, onPlayShift }) {
 
   return (
     <div className="premium-page dashboard-page">
-      <BalanceCard balance={balance} rate={gameRate} />
+      <BalanceCard balance={balance} rate={gameRate} compact />
 
       <section className="dashboard-api-summary">
         <article>

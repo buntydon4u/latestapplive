@@ -10,6 +10,15 @@ function isIos() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+function isMobileDevice() {
+  const ua = window.navigator.userAgent || '';
+  return (
+    /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
+    window.navigator.userAgentData?.mobile === true ||
+    window.matchMedia?.('(pointer: coarse)').matches === true
+  );
+}
+
 export default function InstallGate({ children }) {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [stage, setStage] = useState('landing');
@@ -64,7 +73,7 @@ export default function InstallGate({ children }) {
     }
   }
 
-  if (isStandalone()) return children;
+  if (isStandalone() || !isMobileDevice()) return children;
 
   return (
     <main className="install-gate">

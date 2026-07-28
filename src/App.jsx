@@ -39,7 +39,7 @@ function pageFromPath() {
 }
 
 function AppRoutes() {
-  const { user, parentSelection, loading } = useAuth();
+  const { user, parentSelection, showParentSelection, loading } = useAuth();
   const [activePage, setActivePage] = useState(pageFromPath);
   const [selectedShiftId, setSelectedShiftId] = useState('');
 
@@ -93,7 +93,7 @@ function AppRoutes() {
     return <div className="boot-screen"><span className="loader" />Loading</div>;
   }
 
-  if (parentSelection) {
+  if (showParentSelection && parentSelection) {
     return <ParentSelection />;
   }
 

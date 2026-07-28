@@ -54,9 +54,9 @@ export function LoadingState({ label = 'Loading...' }) {
   );
 }
 
-export function BalanceCard({ balance, rate = 10 }) {
+export function BalanceCard({ balance, rate = 10, compact = false }) {
   return (
-    <section className="premium-balance-card">
+    <section className={`premium-balance-card ${compact ? 'is-compact' : ''}`}>
       <span>GAME RATE {rate}</span>
       <div>
         <small>RS</small>
@@ -132,12 +132,19 @@ function BottomTabNavigation({ activePage, onNavigate }) {
 }
 
 export default function DashboardLayout({ children, activePage, onNavigate }) {
-  const { user, logout } = useAuth();
+  const { user, logout, parentSelection, switchAccount } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   function navigate(page) {
     setDrawerOpen(false);
     onNavigate(page);
+  }
+
+  async function handleSwitchAccount() {
+    const result = await switchAccount();
+    if (result?.success) {
+      setDrawerOpen(false);
+    }
   }
 
   return (
@@ -149,13 +156,23 @@ export default function DashboardLayout({ children, activePage, onNavigate }) {
           <aside className="premium-menu-drawer" onClick={(event) => event.stopPropagation()}>
             <div className="premium-drawer-head">
               <BrandLogo initials={(user?.name || '55').slice(0, 2).toUpperCase()} />
-              <div>
+              <div className="premium-drawer-user">
                 <b>{user?.name || 'User'}</b>
                 <span>Authenticated</span>
+                {parentSelection ? (
+                  <button className="switch-account-action" onClick={handleSwitchAccount} type="button">
+                    Switch account
+                  </button>
+                ) : null}
               </div>
               <button className="header-icon" onClick={() => setDrawerOpen(false)} type="button">X</button>
             </div>
             <div className="premium-drawer-list">
+              {parentSelection ? (
+                <button className="switch-account-action mobile-switch-account" onClick={handleSwitchAccount} type="button">
+                  Switch account
+                </button>
+              ) : null}
               {drawerItems.map((item) => (
                 item.type === 'section'
                   ? <span className="drawer-section-title" key={item.label}>{item.label}</span>
