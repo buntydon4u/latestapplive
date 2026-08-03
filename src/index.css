@@ -3571,6 +3571,27 @@ footer {
   overflow-wrap: anywhere;
 }
 
+.statement-table th:nth-child(1),
+.statement-table td:nth-child(1) {
+  width: 24%;
+}
+
+.statement-table th:nth-child(2),
+.statement-table td:nth-child(2),
+.statement-table th:nth-child(3),
+.statement-table td:nth-child(3),
+.statement-table th:nth-child(4),
+.statement-table td:nth-child(4),
+.statement-table th:nth-child(5),
+.statement-table td:nth-child(5) {
+  width: 11%;
+}
+
+.statement-table th:nth-child(6),
+.statement-table td:nth-child(6) {
+  width: 32%;
+}
+
 .statement-notice {
   border-radius: 12px;
   border: 1px solid rgba(220, 38, 38, 0.2);
@@ -3593,9 +3614,32 @@ footer {
 }
 
 @media (max-width: 640px) {
+  .statement-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .statement-table {
+    min-width: 760px;
+  }
+
   .statement-table th,
   .statement-table td {
-    padding: 12px 12px;
-    font-size: 0.9rem;
+    padding: 12px 10px;
+    font-size: 0.84rem;
+    line-height: 1.2;
+  }
+
+  .statement-table th {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .statement-table td {
+    vertical-align: top;
+  }
+
+  .statement-table td[data-label='From -> To'] {
+    overflow-wrap: anywhere;
   }
 }
