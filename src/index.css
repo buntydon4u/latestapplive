@@ -1082,6 +1082,182 @@ footer {
   color: var(--muted);
 }
 
+.statement-page {
+  display: grid;
+  gap: 16px;
+}
+
+.statement-page.is-embedded {
+  gap: 12px;
+}
+
+.statement-hero {
+  display: grid;
+  gap: 16px;
+  background:
+    radial-gradient(circle at top right, hsl(352 66% 46% / 0.14), transparent 32%),
+    linear-gradient(180deg, var(--surface), hsl(44 36% 98%));
+}
+
+.statement-hero-copy h1 {
+  margin: 6px 0 0;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+}
+
+.statement-hero-copy p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.statement-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.statement-summary-card {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, hsl(0 0% 100%), hsl(44 36% 98%));
+  padding: 14px;
+}
+
+.statement-summary-card span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.statement-summary-card b {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.statement-summary-card small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.statement-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.statement-toolbar label {
+  display: grid;
+  gap: 6px;
+}
+
+.statement-toolbar label span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.statement-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.statement-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.statement-table-panel,
+.statement-panel {
+  overflow: hidden;
+}
+
+.statement-table-wrap {
+  overflow-x: auto;
+}
+
+.statement-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.statement-table th,
+.statement-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.statement-table th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.statement-table td {
+  color: var(--text);
+}
+
+.statement-table td:last-child,
+.statement-table th:last-child {
+  text-align: right;
+}
+
+.statement-adjustment-list,
+.statement-detail-list {
+  display: grid;
+  gap: 10px;
+}
+
+.statement-adjustment-row,
+.statement-detail-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+
+.statement-adjustment-row div,
+.statement-detail-list div > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.statement-adjustment-row b,
+.statement-detail-list b {
+  color: var(--text);
+}
+
+.statement-adjustment-row span,
+.statement-detail-list span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.statement-adjustment-row strong {
+  align-self: center;
+  font-size: 1rem;
+}
+
+.statement-adjustment-row strong.positive {
+  color: var(--accent);
+}
+
+.statement-adjustment-row strong.negative {
+  color: var(--danger);
+}
+
 .drawer-backdrop, .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1274,6 +1450,16 @@ footer {
 
   .party-jantri-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statement-hero-metrics,
+  .statement-toolbar,
+  .statement-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-actions {
+    justify-content: flex-start;
   }
 
   .jantri-grid {
@@ -1488,6 +1674,11 @@ footer {
 
   .entry-row {
     grid-template-columns: 72px 1fr 40px;
+  }
+
+  .statement-table td:last-child,
+  .statement-table th:last-child {
+    text-align: left;
   }
 }
 
@@ -3192,4 +3383,219 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   .install-spinner,
   .install-progress span { animation-duration: 0.01ms; }
+}
+
+/* Statement page overrides */
+.statement-page {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 0 0 calc(16px + env(safe-area-inset-bottom));
+  background: transparent;
+  gap: 14px;
+}
+
+.statement-page.is-standalone {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 20px 18px calc(24px + env(safe-area-inset-bottom));
+}
+
+.statement-page .notice.full {
+  border-radius: 0;
+}
+
+.statement-page .statement-notice {
+  border-radius: 12px;
+}
+
+.statement-heading {
+  margin-bottom: 2px;
+}
+
+.statement-heading h1 {
+  margin: 0;
+  color: var(--premium-text);
+  font-size: clamp(1.95rem, 3.6vw, 2.95rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.statement-heading .title-subline {
+  margin: 8px 0 0;
+  color: var(--premium-muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.statement-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  border: 1px solid rgba(185, 151, 25, 0.2);
+  border-radius: 12px;
+  background: var(--premium-card);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  padding: 16px;
+}
+
+.statement-toolbar label {
+  display: grid;
+  gap: 8px;
+}
+
+.statement-toolbar label span {
+  color: var(--premium-gold);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.statement-toolbar input[type='date'] {
+  height: 50px;
+  border: 1px solid rgba(185, 151, 25, 0.22);
+  border-radius: 10px;
+  background: rgba(12, 8, 20, 0.98);
+  box-shadow: none;
+  color: var(--premium-text);
+  font-size: 1rem;
+}
+
+.statement-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.statement-filter-button {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.statement-table-shell {
+  width: 100%;
+  padding: 0;
+  border: 1px solid rgba(185, 151, 25, 0.2);
+  border-radius: 12px;
+  background: var(--premium-card);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+}
+
+.statement-table-wrap {
+  overflow-x: auto;
+}
+
+.statement-page .statement-table-shell,
+.statement-page .statement-table-wrap,
+.statement-page .statement-table,
+.statement-page .statement-table thead,
+.statement-page .statement-table tbody,
+.statement-page .statement-table tr,
+.statement-page .statement-table th,
+.statement-page .statement-table td {
+  background: transparent;
+}
+
+.statement-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--premium-card);
+  color: var(--premium-text);
+}
+
+.statement-table th,
+.statement-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.96rem;
+  color: var(--premium-text);
+}
+
+.statement-table th {
+  background: rgba(20, 12, 34, 0.98);
+  color: var(--premium-gold);
+  font-weight: 900;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statement-table tbody tr:nth-child(odd) td {
+  background: rgba(20, 12, 34, 0.98);
+}
+
+.statement-table tbody tr:nth-child(even) td {
+  background: rgba(27, 16, 45, 0.98);
+}
+
+.statement-pl-row td {
+  background: inherit;
+}
+
+.statement-pl-value {
+  color: #ff7474;
+  font-weight: 900;
+}
+
+.statement-amount-cell {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.statement-table td[data-label='Date/Time'] {
+  width: 28%;
+}
+
+.statement-table td[data-label='Deposit'],
+.statement-table td[data-label='Withdraw'],
+.statement-table td[data-label='P/L'],
+.statement-table td[data-label='Balance'] {
+  width: 12%;
+}
+
+.statement-table td:last-child,
+.statement-table th:last-child {
+  text-align: left;
+}
+
+.statement-table td[data-label='From -> To'] {
+  width: 24%;
+  overflow-wrap: anywhere;
+}
+
+.statement-notice {
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.12);
+  color: #ff9a9a;
+}
+
+@media (max-width: 900px) {
+  .statement-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-actions {
+    justify-content: flex-start;
+  }
+
+  .statement-page.is-standalone {
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .statement-table th,
+  .statement-table td {
+    padding: 12px 12px;
+    font-size: 0.9rem;
+  }
 }

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import StatementReport from './StatementReport.jsx';
 
 function toInputDate(displayDate) {
   const [day, month, year] = String(displayDate || '').split('-');
@@ -17,22 +18,10 @@ function displayDate(value) {
   }).replace(/^(\d{2} \w{3}) (\d{4})$/, '$1, $2');
 }
 
-function monthStatementRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const fmt = (date) => date.toISOString().slice(0, 10);
-  return { start: fmt(start), end: fmt(now) };
-}
-
 export default function Reports({ initialView = 'hisab' }) {
   const { user } = useAuth();
   const [hisabs, setHisabs] = useState([]);
   const [viewer, setViewer] = useState(null);
-
-  const statementUrl = useMemo(() => {
-    const range = monthStatementRange();
-    return `https://new.555xch.pro/app_statement/${user?.id}?start_date=${range.start}&end_date=${range.end}`;
-  }, [user]);
 
   useEffect(() => {
     api.hisabs().then((result) => {
@@ -42,16 +31,17 @@ export default function Reports({ initialView = 'hisab' }) {
 
   useEffect(() => {
     if (initialView === 'statement') {
-      setViewer({ title: 'Statement', url: statementUrl });
+      setViewer({ kind: 'statement', title: 'Statement' });
     } else {
       setViewer(null);
     }
-  }, [initialView, statementUrl]);
+  }, [initialView]);
 
   function openHisab(hisab) {
     const master = encodeURIComponent(hisab.updated_by || user.updated_by || '');
     const date = encodeURIComponent(hisab.date);
     setViewer({
+      kind: 'iframe',
       title: `Hisab ${displayDate(hisab.date)}`,
       url: `https://new.555xch.pro/ledger_till_date_reports_app?ledger_id=${user.id}&date=${date}&master=${master}`
     });
@@ -64,7 +54,7 @@ export default function Reports({ initialView = 'hisab' }) {
           <span className="eyebrow">Reports</span>
           <h1>{initialView === 'statement' ? 'Statement' : 'Hisab'}</h1>
         </div>
-        <button className="secondary-button" onClick={() => setViewer({ title: 'Statement', url: statementUrl })}>Statement</button>
+        <button className="secondary-button" onClick={() => setViewer({ kind: 'statement', title: 'Statement' })}>Statement</button>
       </section>
 
       {initialView === 'hisab' ? (
@@ -94,9 +84,15 @@ export default function Reports({ initialView = 'hisab' }) {
       <section className="panel iframe-panel">
         <div className="panel-title">
           <h3>{viewer?.title || (initialView === 'statement' ? 'Statement' : 'Hisab viewer')}</h3>
-          {viewer ? <a className="ghost-button" href={viewer.url} target="_blank" rel="noreferrer">Open</a> : null}
+          {viewer?.kind === 'iframe' ? <a className="ghost-button" href={viewer.url} target="_blank" rel="noreferrer">Open</a> : null}
         </div>
-        {viewer ? <iframe title={viewer.title} src={viewer.url} /> : <p className="empty-state">Click View Hisab to load the portal report.</p>}
+        {viewer?.kind === 'statement' ? (
+          <StatementReport embedded />
+        ) : viewer?.kind === 'iframe' ? (
+          <iframe title={viewer.title} src={viewer.url} />
+        ) : (
+          <p className="empty-state">Click View Hisab to load the portal report.</p>
+        )}
       </section>
     </div>
   );
