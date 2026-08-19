@@ -84,7 +84,7 @@ REMOTE_TRANSACTION_BASE_URL=https://new.555xch.pro
 
 - Existing frontend PHP pages are not modified.
 - Existing database schema is preserved.
-- Transaction creation and deletion intentionally proxy to the existing live endpoints because the Core PHP app already delegates these operations to `https://new.555xch.pro/tbl_transactions/...` and `https://new.555xch.pro/tbl_jantri/...`.
+- Transaction creation proxies to the existing live endpoint. Transaction deletion runs locally in an authenticated database transaction so it does not depend on the browser-session-only legacy `remove_app` route.
 - Passwords are compared exactly as the current app stores them in `tbl_ledger.password`. A later hardening step should migrate to `password_hash()` and `password_verify()` after all legacy clients are ready.
 - All private routes require `Authorization: Bearer <token>`.
 - All responses are JSON only.

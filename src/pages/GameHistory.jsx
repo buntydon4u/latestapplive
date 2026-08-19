@@ -105,13 +105,18 @@ export default function GameHistory() {
   async function handleDelete(transaction) {
     if (!window.confirm(`Delete this game entry (${transaction.shift_name || 'Market'})?`)) return;
     setDeletingId(transaction.id);
-    const result = await api.deleteTransaction(transaction.id);
-    if (result.success) {
-      setTransactions((prev) => prev.filter((t) => t.id !== transaction.id));
-    } else {
-      alert(result.message || 'Failed to delete game.');
+    try {
+      const result = await api.deleteTransaction(transaction.id);
+      if (result.success) {
+        setTransactions((prev) => prev.filter((t) => Number(t.id) !== Number(transaction.id)));
+      } else {
+        alert(result.message || 'Failed to delete game.');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to delete game.');
+    } finally {
+      setDeletingId(null);
     }
-    setDeletingId(null);
   }
 
   return (

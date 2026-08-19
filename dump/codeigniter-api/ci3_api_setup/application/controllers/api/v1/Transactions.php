@@ -123,20 +123,20 @@ class Transactions extends Api_Controller
             return $this->validation_error(array('id' => 'Transaction ID required'));
         }
 
-        $this->config->load('api', true);
-        $base_url = rtrim($this->config->item('remote_transaction_base_url', 'api'), '/');
-        $url = $base_url . '/tbl_transactions/remove_app/' . (int) $id . '/' . (int) $payload['user_id'];
+        $result = $this->Transaction_model->delete_for_ledger(
+            $id,
+            $payload['user_id'],
+            isset($payload['user_type']) ? $payload['user_type'] : 'ledger'
+        );
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($error) {
-            return $this->error('Delete request failed', 502, array('remote_error' => $error));
+        if (empty($result['success'])) {
+            if ($result['code'] === 'not_found') {
+                return $this->error('Transaction not found', 404);
+            }
+            if ($result['code'] === 'time_expired') {
+                return $this->error('The allowed time for deleting this transaction has expired', 403);
+            }
+            return $this->error('Transaction could not be deleted', 500);
         }
 
         return $this->success(array('id' => (int) $id), 'Transaction deleted successfully');

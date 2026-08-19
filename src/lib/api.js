@@ -67,6 +67,7 @@ async function request(path, options = {}) {
 
   const init = {
     method: options.method || 'GET',
+    cache: options.cache || 'default',
     headers: {
       Accept: 'application/json',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
@@ -168,7 +169,7 @@ export const api = {
     return { ...result, shifts: Array.isArray(result.data) ? result.data : [] };
   },
   transactions: async () => {
-    const result = await request('transactions');
+    const result = await request('transactions', { cache: 'no-store' });
     return { ...result, transactions: Array.isArray(result.data) ? result.data : [] };
   },
   transactionDetails: (id) => request(`transactions/${id}`),
