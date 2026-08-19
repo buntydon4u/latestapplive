@@ -1082,6 +1082,204 @@ footer {
   color: var(--muted);
 }
 
+.hisab-report-page {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 0 0 calc(16px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 14px;
+}
+
+.hisab-report-heading h1 {
+  font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+}
+
+.hisab-hero-panel {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(185, 151, 25, 0.2);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(185, 151, 25, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(20, 12, 34, 0.98), rgba(27, 16, 45, 0.98));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  padding: 18px 18px 16px;
+}
+
+.hisab-hero-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.hisab-hero-copy h2 {
+  margin: 0;
+  color: var(--premium-text);
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.hisab-hero-copy p {
+  margin: 0;
+  color: var(--premium-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.hisab-hero-date {
+  display: grid;
+  align-content: space-between;
+  justify-items: end;
+  gap: 8px;
+  min-width: 150px;
+  padding: 12px 14px;
+  border: 1px solid rgba(185, 151, 25, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--premium-text);
+  text-align: right;
+}
+
+.hisab-hero-date span {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.hisab-hero-date small {
+  color: var(--premium-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hisab-report-table-panel {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(185, 151, 25, 0.2);
+  border-radius: 14px;
+  background: var(--premium-card);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.hisab-report-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hisab-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--premium-card);
+  color: var(--premium-text);
+}
+
+.hisab-report-table th,
+.hisab-report-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 13px 14px;
+  text-align: center;
+  font-size: 0.94rem;
+}
+
+.hisab-report-table th:last-child,
+.hisab-report-table td:last-child {
+  border-right: 0;
+}
+
+.hisab-report-table thead th {
+  background: rgba(20, 12, 34, 0.98);
+  color: var(--premium-gold);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hisab-report-table tbody tr:nth-child(odd) td {
+  background: rgba(20, 12, 34, 0.98);
+}
+
+.hisab-report-table tbody tr:nth-child(even) td {
+  background: rgba(27, 16, 45, 0.98);
+}
+
+.hisab-row-pl td {
+  color: #ff9a9a;
+}
+
+.hisab-row-transaction td {
+  color: var(--premium-text);
+}
+
+.hisab-amount-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.hisab-total-row td {
+  background: rgba(185, 151, 25, 0.12) !important;
+  color: var(--premium-gold);
+  font-weight: 900;
+}
+
+.hisab-total-label {
+  text-align: left !important;
+}
+
+.hisab-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hisab-summary-card {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  border: 1px solid rgba(185, 151, 25, 0.18);
+  border-radius: 14px;
+  background: var(--premium-card);
+  padding: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.hisab-summary-card span {
+  color: var(--premium-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hisab-summary-card b {
+  color: var(--premium-gold);
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.hisab-summary-card.is-accent b {
+  color: #7cd4ff;
+}
+
+.hisab-summary-card.is-good b {
+  color: #73e6b6;
+}
+
+.hisab-notice {
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.12);
+  color: #ff9a9a;
+}
+
+.hisab-list-page {
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+
 .statement-page {
   display: grid;
   gap: 16px;
@@ -3641,5 +3839,33 @@ footer {
 
   .statement-table td[data-label='From -> To'] {
     overflow-wrap: anywhere;
+  }
+
+  .hisab-report-page {
+    gap: 12px;
+  }
+
+  .hisab-hero-panel {
+    flex-direction: column;
+  }
+
+  .hisab-hero-date {
+    justify-items: start;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .hisab-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hisab-report-table {
+    min-width: 760px;
+  }
+
+  .hisab-report-table th,
+  .hisab-report-table td {
+    padding: 11px 10px;
+    font-size: 0.82rem;
   }
 }

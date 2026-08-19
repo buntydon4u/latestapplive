@@ -53,6 +53,8 @@ $route['api/v1/party-jantri/report']['options'] = 'api/v1/PartyJantri/report';
 
 $route['api/v1/hisabs']['get'] = 'api/v1/Hisabs/index';
 $route['api/v1/hisabs']['options'] = 'api/v1/Hisabs/index';
+$route['api/v1/hisabs/report']['get'] = 'api/v1/Hisabs/report';
+$route['api/v1/hisabs/report']['options'] = 'api/v1/Hisabs/report';
 
 $route['api/v1/results/latest']['get'] = 'api/v1/Results/latest';
 $route['api/v1/results/latest']['options'] = 'api/v1/Results/latest';

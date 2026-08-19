@@ -1,57 +1,49 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
+import { formatMoney } from '../components/DashboardLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
-function toInputDate(displayDate) {
-  const [day, month, year] = String(displayDate || '').split('-');
-  return year && month && day ? `${year}-${month}-${day}` : '';
-}
-
 function displayDate(value) {
-  const parsed = new Date(toInputDate(value) || value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('en-GB', {
+  if (!value) return '--';
+  const text = String(value).trim();
+  const normalized = /^\d{2}-\d{2}-\d{4}$/.test(text)
+    ? `${text.slice(6, 10)}-${text.slice(3, 5)}-${text.slice(0, 2)}`
+    : text.slice(0, 10);
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   }).replace(/^(\d{2} \w{3}) (\d{4})$/, '$1, $2');
 }
 
-export default function Hisab() {
+export default function Hisab({ onNavigate }) {
   const { user } = useAuth();
   const [hisabs, setHisabs] = useState([]);
-  const [iframeUrl, setIframeUrl] = useState(null);
-  const [iframeTitle, setIframeTitle] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     api.hisabs().then((result) => {
       if (result.success) setHisabs(result.hisabs || []);
+      else setNotice(result.error || 'Unable to load hisab dates.');
     });
   }, []);
 
   function openHisab(hisab) {
-    const master = encodeURIComponent(hisab.updated_by || user.updated_by || '');
-    const date = encodeURIComponent(hisab.date);
-    setIframeTitle(`Hisab ${displayDate(hisab.date)}`);
-    setIframeUrl(
-      `https://new.555xch.pro/ledger_till_date_reports_app?ledger_id=${user.id}&date=${date}&master=${master}`
-    );
-  }
+    const search = new URLSearchParams({
+      ledger_id: String(user?.id || ''),
+      date: String(hisab.date || ''),
+      master: String(hisab.updated_by || user?.updated_by || '')
+    });
 
-  if (iframeUrl) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
-          <button className="ghost-button" onClick={() => setIframeUrl(null)}>← Back</button>
-          <span style={{ marginLeft: 12, fontWeight: 600 }}>{iframeTitle}</span>
-        </div>
-        <iframe
-          title={iframeTitle}
-          src={iframeUrl}
-          style={{ flex: 1, width: '100%', border: 'none' }}
-        />
-      </div>
-    );
+    if (typeof onNavigate === 'function') {
+      onNavigate('hisabView', { search });
+      return;
+    }
+
+    window.history.pushState({ page: 'hisabView' }, '', `/reports/hisab/view?${search.toString()}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
   return (
@@ -59,13 +51,17 @@ export default function Hisab() {
       <section className="section-heading">
         <span className="eyebrow">Reports</span>
         <h1>Hisab</h1>
+        <p className="title-subline">Open the dedicated till-date report page for each date.</p>
       </section>
+
+      {notice ? <div className="notice full">{notice}</div> : null}
 
       <section className="hisab-card">
         <table className="hisab-table">
           <thead>
             <tr>
               <th>Date</th>
+              <th>Hisab</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -73,8 +69,9 @@ export default function Hisab() {
             {hisabs.map((hisab) => (
               <tr key={hisab.date}>
                 <td>{displayDate(hisab.date)}</td>
+                <td>{formatMoney(hisab.today_hisab ?? hisab.final_hisab ?? 0)}</td>
                 <td>
-                  <button className="badge-button" onClick={() => openHisab(hisab)}>
+                  <button className="badge-button" onClick={() => openHisab(hisab)} type="button">
                     View Hisab
                   </button>
                 </td>

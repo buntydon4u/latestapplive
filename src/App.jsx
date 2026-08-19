@@ -6,6 +6,7 @@ import DashboardLayout from './components/DashboardLayout.jsx';
 import DataEntry from './pages/DataEntry.jsx';
 import ViewResults from './pages/ViewResults.jsx';
 import Hisab from './pages/Hisab.jsx';
+import HisabTillDate from './pages/HisabTillDate.jsx';
 import Statement from './pages/Statement.jsx';
 import Home from './pages/Home.jsx';
 import Wallet from './pages/Wallet.jsx';
@@ -27,6 +28,7 @@ const pagePaths = {
   jantri: '/jantri/party',
   results: '/results',
   hisab: '/reports/hisab',
+  hisabView: '/reports/hisab/view',
   statement: '/reports/statement',
   accountProfile: '/account/profile',
   changePassword: '/account/change-password'
@@ -43,11 +45,16 @@ function AppRoutes() {
   const [activePage, setActivePage] = useState(pageFromPath);
   const [selectedShiftId, setSelectedShiftId] = useState('');
 
-  function navigate(page) {
+  function navigate(page, options = {}) {
     setActivePage(page);
     const path = pagePaths[page];
     if (path && window.location.pathname !== path) {
-      window.history.pushState({ page }, '', path);
+      const search = options.search instanceof URLSearchParams
+        ? `?${options.search.toString()}`
+        : options.search
+          ? `?${new URLSearchParams(options.search).toString()}`
+          : '';
+      window.history.pushState({ page, ...options }, '', `${path}${search}`);
     }
   }
 
@@ -66,7 +73,8 @@ function AppRoutes() {
     cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
     jantri: PartyJantri,
     results: ViewResults,
-    hisab: Hisab,
+    hisab: () => <Hisab onNavigate={navigate} />,
+    hisabView: () => <HisabTillDate onNavigate={navigate} />,
     statement: Statement,
     accountProfile: AccountProfile,
     changePassword: ChangePassword

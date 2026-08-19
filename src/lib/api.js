@@ -176,6 +176,16 @@ export const api = {
     const result = await request('hisabs');
     return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
   },
+  hisabTillDateReport: async (params) => {
+    const result = await request('hisabs/report', { params });
+    const report = result.data && typeof result.data === 'object' ? result.data : {};
+    return {
+      ...result,
+      report,
+      rows: Array.isArray(report.rows) ? report.rows : [],
+      summary: report.summary || {}
+    };
+  },
   declaredResults: async (limit = 10) => {
     const result = await request('results/latest', { params: { limit } });
     return { ...result, results: Array.isArray(result.data) ? result.data : [] };
