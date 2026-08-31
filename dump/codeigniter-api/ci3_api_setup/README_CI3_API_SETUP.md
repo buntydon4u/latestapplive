@@ -75,7 +75,7 @@ or set the server environment variable:
 ```text
 JWT_SECRET=a-long-random-secret
 JWT_TTL=86400
-REMOTE_TRANSACTION_BASE_URL=https://new.555xch.pro
+REMOTE_TRANSACTION_BASE_URL=https://new.bull99exch.com
 ```
 
 5. Optional but recommended: run `docs/SQL_CHANGES_OPTIONAL.sql` for server-side token logout.

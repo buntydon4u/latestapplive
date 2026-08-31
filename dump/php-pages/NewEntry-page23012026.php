@@ -10,7 +10,7 @@ $SITEURL = 'http://' . $_SERVER['HTTP_HOST'] . '/Login.html';
 $_SESSION['login'] = $_GET['login']; 
 $_SESSION['user_type'] = $_GET['user_type'];
 if (isset($_GET['parentid'])) {
-    $home = 'https://new.555xch.pro/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
+    $home = 'https://new.bull99exch.com/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     $entry = 'Entry-page.php?login=' . $_GET["login"] . '&user_type=ledger&parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     $view = '?login=' . $_GET["login"] . '&user_type=ledger&parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
 } else {
@@ -1000,7 +1000,7 @@ if (isset($_GET['parentid'])) {
         echo '<script>alert("Invalid Entry. Please try again!!");</script>';
     }
     if (isset($_GET['parentid'])) {
-        $home = 'https://new.555xch.pro/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
+        $home = 'https://new.bull99exch.com/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     } else {
         $home = '#';
     }
@@ -1027,7 +1027,7 @@ if (isset($_GET['parentid'])) {
                                 <h4 class="text-white"> <a href="statement.php/<?= $_GET['login'] ?>?start_date=<?= $start_date ?>&end_date=<?= $end_date ?>" style="color:white">
                                         <i class="fas fa-book" style="color:white !important" id="showbtn"></i> Statement
                                     </a></h4>
-                                <h4 class="text-white"><a href="https://new.555xch.pro/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
+                                <h4 class="text-white"><a href="https://new.bull99exch.com/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -1205,7 +1205,7 @@ Disawer..............4.10 Am
 
                                     </div>
                                 </div>
-                                <form id="demo-form2" action="https://new.555xch.pro/tbl_transactions/add_transaction_final_app" method="POST" data-parsley-validate
+                                <form id="demo-form2" action="https://new.bull99exch.com/tbl_transactions/add_transaction_final_app" method="POST" data-parsley-validate
                                     class="form-horizontal form-label-left" onsubmit="checkFields(event)">
 
                                     <!-- Select  Date -->

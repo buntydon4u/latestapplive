@@ -587,7 +587,7 @@ switch ($action) {
         }
 
         // We will proxy the POST request to the live backend using cURL
-        $url = "https://new.555xch.pro/tbl_transactions/add_transaction_final_app_api";
+        $url = "https://new.bull99exch.com/tbl_transactions/add_transaction_final_app_api";
         $conn = get_db_connection();
         $shift_id = resolve_shift_id($conn, $_POST['shift'], $_SESSION['updated_by']);
         $conn->close();
@@ -644,7 +644,7 @@ switch ($action) {
             exit();
         }
 
-        $url = "https://new.555xch.pro/tbl_jantri/add_jantri_form_app";
+        $url = "https://new.bull99exch.com/tbl_jantri/add_jantri_form_app";
         $conn = get_db_connection();
         $shift_id = resolve_shift_id($conn, $_POST['shift'], $_SESSION['updated_by']);
         $conn->close();
@@ -709,7 +709,7 @@ switch ($action) {
         }
 
         $userid = $_SESSION['login'];
-        $url = "https://new.555xch.pro/tbl_transactions/remove_app/$id/$userid";
+        $url = "https://new.bull99exch.com/tbl_transactions/remove_app/$id/$userid";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

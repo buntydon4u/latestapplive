@@ -9,7 +9,7 @@ $SITEURL = 'http://' . $_SERVER['HTTP_HOST'] . '/Login.html';
 //exit();
 //}
 if (isset($_GET['parentid'])) {
-    $home = 'https://new.555xch.pro/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
+    $home = 'https://new.bull99exch.com/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     $entry = 'Entry-page.php?login=' . $_GET["login"] . '&user_type=ledger&parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     $view = '&login=' . $_GET["login"] . '&user_type=ledger&parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     $hisabview = '?login=' . $_GET["login"] . '&user_type=ledger&parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
@@ -349,7 +349,7 @@ if (isset($_GET['parentid'])) {
         echo '<script>alert("Invalid Entry. Please try again!!");</script>';
     }
     if (isset($_GET['parentid'])) {
-        $home = 'https://new.555xch.pro/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
+        $home = 'https://new.bull99exch.com/appdemo/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     } else {
         $home = '#';
     }
@@ -376,7 +376,7 @@ if (isset($_GET['parentid'])) {
                                 <h4 class="text-white"> <a href="statement.php/<?= $_GET['login'] ?>?start_date=<?= $start_date ?>&end_date=<?= $end_date ?>" style="color:white">
                                         <i class="fas fa-book" style="color:white !important" id="showbtn"></i> Statement
                                     </a></h4>
-                                <h4 class="text-white"><a href="https://new.555xch.pro/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
+                                <h4 class="text-white"><a href="https://new.bull99exch.com/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
                             </div>
                             <div class="card-body">
                                 <form method="POST">
@@ -528,7 +528,7 @@ if (isset($_GET['parentid'])) {
 														<td data-lable="Date"> -->
                                                                             <?php //if($ttime<$time && (date('Y-m-d',$ttime) == date('Y-m-d', strtotime($row['t_date'])))){ 
                                                                             ?>
-                                                                            <a href="https://new.555xch.pro/tbl_transactions/remove_app/<?= $row['id'] ?>/<?= $userid ?>" onclick="return confirm('Are you sure you want to delete?')" class="badge badge-danger view-btn">Delete</a>
+                                                                            <a href="https://new.bull99exch.com/tbl_transactions/remove_app/<?= $row['id'] ?>/<?= $userid ?>" onclick="return confirm('Are you sure you want to delete?')" class="badge badge-danger view-btn">Delete</a>
                                                                         </td>
                                                                         <?php //}
                                                                         ?>
@@ -546,7 +546,7 @@ if (isset($_GET['parentid'])) {
 														<td data-lable="Date"> -->
                                                                             <?php //if($ttime<$time && (date('Y-m-d',$ttime) == date('Y-m-d', strtotime($row['t_date'])))){ 
                                                                             ?>
-                                                                            <a href="https://new.555xch.pro/tbl_transactions/remove_app/<?= $row['id'] ?>/<?= $userid ?>" onclick="return confirm('Are you sure you want to delete?')" class="badge badge-danger view-btn">Delete</a>
+                                                                            <a href="https://new.bull99exch.com/tbl_transactions/remove_app/<?= $row['id'] ?>/<?= $userid ?>" onclick="return confirm('Are you sure you want to delete?')" class="badge badge-danger view-btn">Delete</a>
                                                                         </td>
                                                                         <?php //}
                                                                         ?>

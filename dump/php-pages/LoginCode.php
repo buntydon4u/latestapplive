@@ -56,7 +56,7 @@ $datacount = 1;
 if (empty($datacount)) {
 	?>
 	<script>alert('Invalid User name or Password!!');
-	window.location.href = "https://new.555xch.pro/appdemo/Login.html";
+	window.location.href = "https://new.bull99exch.com/appdemo/Login.html";
 	</script>
 	<?php
 	//header("location:Login.html");

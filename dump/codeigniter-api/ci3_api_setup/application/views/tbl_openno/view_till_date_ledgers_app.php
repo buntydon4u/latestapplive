@@ -79,7 +79,7 @@ $homeUrl = isset($_GET['parentid'])
 $entryUrl = 'Entry-page.php?login=' . urlencode($ledgerId) . '&user_type=ledger' . (isset($_GET['parentid']) ? '&parentid=' . urlencode($_GET['parentid']) . '&name=' . urlencode(isset($_GET['name']) ? $_GET['name'] : '') : '');
 $statementUrl = 'statement.php/' . urlencode($ledgerId) . '?start_date=' . date('Y-m-01') . '&end_date=' . date('Y-m-d');
 $listUrl = 'hisablist.php?login=' . urlencode($ledgerId) . '&user_type=ledger';
-$logoutUrl = 'https://new.555xch.pro/appdemo/Login.html';
+$logoutUrl = 'https://new.bull99exch.com/appdemo/Login.html';
 ?>
 <!DOCTYPE html>
 <html lang="en">

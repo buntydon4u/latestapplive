@@ -179,7 +179,7 @@ $SITEURL = 'http://'.$_SERVER['HTTP_HOST'].'/Login.html';
 	   echo '<script>alert("Invalid Entry. Please try again!!");</script>';
    }
    if(isset($_GET['parentid'])){
-	$home = 'https://new.555xch.pro/Parent.php?parentid='.$_GET["parentid"].'&name='.$_GET["name"];   
+	$home = 'https://new.bull99exch.com/Parent.php?parentid='.$_GET["parentid"].'&name='.$_GET["name"];   
    }
    else{
    $home = '#';

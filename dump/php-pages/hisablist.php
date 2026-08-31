@@ -202,7 +202,7 @@ $SITEURL = 'http://'.$_SERVER['HTTP_HOST'].'/Login.html';
                                <h4 class="text-white"> <a href="statement.php/<?=  $_GET['login'] ?>?start_date=<?= $start_date ?>&end_date=<?= $end_date ?>" style="color:white">
                                         <i class="fas fa-book" style="color:white !important" id="showbtn"></i> Statement
                                     </a></h4>
-                               <h4 class="text-white"><a href="https://new.555xch.pro/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
+                               <h4 class="text-white"><a href="https://new.bull99exch.com/appdemo/Login.html" style="color:white"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
 							</div>
               <div class="card-body">
                 <form method="POST">

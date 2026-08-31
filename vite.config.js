@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const phpTarget = env.VITE_PHP_API_TARGET || 'http://localhost:8000';
-  const remoteApi = env.VITE_REMOTE_API || 'https://new.555xch.pro';
+  const remoteApi = env.VITE_REMOTE_API || 'https://new.bull99exch.com';
 
   return {
     plugins: [

@@ -50,7 +50,7 @@ $ledger_id = $match[1];
         const param2 = getUrlParameter('start_date');
         const param3 = getUrlParameter('end_date');
         // Construct the dynamic URL for the iframe
-        const baseIframeUrl = 'https://new.555xch.pro/app_statement'; // Replace with your base URL
+        const baseIframeUrl = 'https://new.bull99exch.com/app_statement'; // Replace with your base URL
        // const iframeUrl = `${baseIframeUrl}?ledger_id=${param1}&date=${param2}&master=${param3}`;
         
         const iframeUrl = `${baseIframeUrl}/${param1}?start_date=${param2}&end_date=${param3}`; 

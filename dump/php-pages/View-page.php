@@ -324,7 +324,7 @@ $end_date    = date('Y-m-d');                 // today's date
         echo '<script>alert("Invalid Entry. Please try again!!");</script>';
     }
     if (isset($_GET['parentid'])) {
-        $home = 'https://new.555xch.pro/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
+        $home = 'https://new.bull99exch.com/Parent.php?parentid=' . $_GET["parentid"] . '&name=' . $_GET["name"];
     } else {
         $home = '#';
     }
@@ -340,7 +340,7 @@ $end_date    = date('Y-m-d');                 // today's date
                                 </h4>
                                 <h4 class="text-white"><a href="<?= $entry ?>" style="color:white"><i class="fas fa-pen" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Entry</a></h4>
                                 <h4 class="text-white"><a href="Date-shift.php<?= $view ?>"><i class="fas fa-book" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> View Transaction</a></h4>
-                                <h4 class="text-white"><a href="https://new.555xch.pro/appdemo/Login.html" style="color:white"><i class="fas fa-pen" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
+                                <h4 class="text-white"><a href="https://new.bull99exch.com/appdemo/Login.html" style="color:white"><i class="fas fa-pen" style="color:white !important" title="" name="ShowkaharIcon" id="showbtn"></i> Logout</a></h4>
                             </div>
                             <div class="card-body">
                                 <?php

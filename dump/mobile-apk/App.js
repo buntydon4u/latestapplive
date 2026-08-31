@@ -16,7 +16,7 @@ function MainApp() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <WebView
-        source={{ html: MOBILE_WEBVIEW_HTML, baseUrl: 'https://new.555xch.pro/' }}
+        source={{ html: MOBILE_WEBVIEW_HTML, baseUrl: 'https://new.bull99exch.com/' }}
         style={styles.webview}
         javaScriptEnabled
         domStorageEnabled

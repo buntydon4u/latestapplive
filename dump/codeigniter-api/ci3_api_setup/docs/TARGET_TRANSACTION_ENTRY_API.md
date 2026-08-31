@@ -15,7 +15,7 @@ $route['tbl_transactions/add_transaction_final_app_api']['post'] = 'tbl_transact
 New target URL:
 
 ```text
-https://new.555xch.pro/tbl_transactions/add_transaction_final_app_api
+https://new.bull99exch.com/tbl_transactions/add_transaction_final_app_api
 ```
 
 After deploying this target method, point the CI3 API proxy to it:

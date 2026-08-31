@@ -40,7 +40,7 @@
         const param2 = getUrlParameter('date');
         const param3 = getUrlParameter('updated_by');
         // Construct the dynamic URL for the iframe
-        const baseIframeUrl = 'https://new.555xch.pro/ledger_till_date_reports_app'; // Replace with your base URL
+        const baseIframeUrl = 'https://new.bull99exch.com/ledger_till_date_reports_app'; // Replace with your base URL
         const iframeUrl = `${baseIframeUrl}?ledger_id=${param1}&date=${param2}&master=${param3}`;
 
         // Set the iframe source when the page loads
