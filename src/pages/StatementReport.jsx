@@ -45,11 +45,23 @@ function comparableDate(value) {
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
 }
 
+function toAmount(value) {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatStatementCell(value, { parens = false } = {}) {
+  if (value === null || value === undefined || value === '') return '-';
+  const money = formatMoney(value);
+  return parens ? `(${money})` : money;
+}
+
 export default function StatementReport({ embedded = false }) {
   const { user } = useAuth();
   const [ledger, setLedger] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [hisabs, setHisabs] = useState([]);
+  const [reportRows, setReportRows] = useState([]);
   const [draftRange, setDraftRange] = useState(defaultRange);
   const [range, setRange] = useState(defaultRange);
   const [loading, setLoading] = useState(true);
@@ -65,13 +77,27 @@ export default function StatementReport({ embedded = false }) {
       setNotice('');
 
       try {
+        const reportResult = await api.hisabTillDateReport({
+          ledger_id: user.id,
+          start_date: range.start,
+          end_date: range.end
+        }).catch(() => ({ success: false, rows: [], report: {} }));
+
+        if (!active) return;
+
+        if (reportResult.success) {
+          setLedger(reportResult.report?.ledger || reportResult.ledger || null);
+          setReportRows(Array.isArray(reportResult.rows) ? reportResult.rows : []);
+          setTransactions([]);
+          setHisabs([]);
+          return;
+        }
+
         const [ledgerResult, transactionResult, hisabResult] = await Promise.all([
           api.ledger(user.id).catch(() => ({ success: false })),
           api.transactions().catch(() => ({ success: false, transactions: [] })),
           api.hisabs().catch(() => ({ success: false, hisabs: [] }))
         ]);
-
-        if (!active) return;
 
         if (ledgerResult.success) {
           setLedger(ledgerResult.data || ledgerResult);
@@ -79,6 +105,7 @@ export default function StatementReport({ embedded = false }) {
 
         setTransactions(transactionResult.success ? (transactionResult.transactions || []) : []);
         setHisabs(hisabResult.success ? (hisabResult.hisabs || []) : []);
+        setReportRows([]);
 
         if (!ledgerResult.success && !transactionResult.success && !hisabResult.success) {
           setNotice('Unable to load statement data.');
@@ -96,57 +123,77 @@ export default function StatementReport({ embedded = false }) {
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [range.end, range.start, user?.id]);
 
   const partyName = ledger?.ledger_name || user?.ledger_name || user?.name || user?.username || '-';
   const rangeLabel = `${displayDate(range.start)} - ${displayDate(range.end)}`;
 
   const tableRows = useMemo(() => {
-    const txRows = transactions
-      .filter((row) => {
-        const value = comparableDate(row.t_date || row.date || row.created_date || row.display_date);
-        if (!value) return true;
-        if (range.start && value < range.start) return false;
-        if (range.end && value > range.end) return false;
-        return true;
-      })
-      .map((row) => ({
-        id: `tx-${row.id}`,
-        sortKey: `${comparableDate(row.t_date || row.display_date)} 00:00:00`,
-        dateText: row.display_date || displayDate(row.t_date),
-        deposit: row.total_amount || '',
-        withdraw: '',
-        pl: '',
-        balance: '',
-        flow: `${user?.username || user?.updated_by || 'User'} -> ${partyName}`,
-        type: 'transaction'
-      }));
+    if (reportRows.length) {
+      return reportRows;
+    }
 
-    const plRows = hisabs
-      .filter((row) => {
-        const value = comparableDate(row.date || row.t_date || row.created_date);
-        if (!value) return true;
-        if (range.start && value < range.start) return false;
-        if (range.end && value > range.end) return false;
-        return true;
-      })
-      .map((row) => {
-        const amount = row.today_hisab ?? row.final_hisab ?? '';
-        return {
-          id: `pl-${row.date}`,
-          sortKey: `${comparableDate(row.date)} 23:59:59`,
-          dateText: `${displayDate(row.date)} 11:59 PM (P/L)`,
-          deposit: '',
-          withdraw: '',
-          pl: amount,
-          balance: '',
-          flow: 'P/L Adjustment',
-          type: 'pl'
-        };
-      });
+    const statementRows = [
+      ...transactions
+        .filter((row) => {
+          const value = comparableDate(row.t_date || row.date || row.created_date || row.display_date);
+          if (!value) return true;
+          if (range.start && value < range.start) return false;
+          if (range.end && value > range.end) return false;
+          return true;
+        })
+        .map((row) => {
+          const amount = toAmount(row.total_amount || row.amount);
+          const ledgerLabel = user?.ledger_name || user?.username || user?.updated_by || 'User';
 
-    return [...txRows, ...plRows].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  }, [hisabs, partyName, range.end, range.start, transactions, user?.updated_by, user?.username]);
+          return {
+            id: `tx-${row.id}`,
+            sortKey: `${comparableDate(row.t_date || row.display_date)} 00:00:00`,
+            dateText: row.display_date || displayDate(row.t_date),
+            deposit: '',
+            withdraw: amount,
+            pl: '',
+            movement: -amount,
+            flow: `${ledgerLabel} -> ${partyName}`,
+            type: 'transaction'
+          };
+        }),
+      ...hisabs
+        .filter((row) => {
+          const value = comparableDate(row.date || row.t_date || row.created_date);
+          if (!value) return true;
+          if (range.start && value < range.start) return false;
+          if (range.end && value > range.end) return false;
+          return true;
+        })
+        .map((row) => {
+          const amount = toAmount(row.today_hisab ?? row.final_hisab);
+
+          return {
+            id: `pl-${row.date}`,
+            sortKey: `${comparableDate(row.date)} 23:59:59`,
+            dateText: `${displayDate(row.date)} 11:59 PM (P/L)`,
+            deposit: '',
+            withdraw: '',
+            pl: amount,
+            movement: amount < 0 ? Math.abs(amount) : -amount,
+            flow: 'P/L Adjustment',
+            type: 'pl'
+          };
+        })
+    ]
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+      .map((row) => row);
+
+    let runningBalance = 0;
+    return statementRows.map((row) => {
+      runningBalance += row.movement || 0;
+      return {
+        ...row,
+        balance: runningBalance
+      };
+    });
+  }, [hisabs, partyName, range.end, range.start, reportRows, transactions, user?.ledger_name, user?.updated_by, user?.username]);
 
   function updateRange(field, value) {
     setDraftRange((current) => ({ ...current, [field]: value }));
@@ -213,12 +260,14 @@ export default function StatementReport({ embedded = false }) {
                 {tableRows.map((row) => (
                   <tr key={row.id} className={row.type === 'pl' ? 'statement-pl-row' : 'statement-tx-row'}>
                     <td data-label="Date/Time">{row.dateText}</td>
-                    <td data-label="Deposit" className="statement-amount-cell">{row.deposit ? formatMoney(row.deposit) : '-'}</td>
-                    <td data-label="Withdraw" className="statement-amount-cell">{row.withdraw ? formatMoney(row.withdraw) : '-'}</td>
+                    <td data-label="Deposit" className="statement-amount-cell">{formatStatementCell(row.deposit)}</td>
+                    <td data-label="Withdraw" className="statement-amount-cell">{row.withdraw !== '' && row.withdraw !== null && row.withdraw !== undefined ? formatStatementCell(row.withdraw, { parens: true }) : '-'}</td>
                     <td data-label="P/L" className={row.type === 'pl' ? 'statement-pl-value' : ''}>
-                      {row.pl !== '' && row.pl !== null && row.pl !== undefined ? formatMoney(row.pl) : '-'}
+                      {row.pl !== '' && row.pl !== null && row.pl !== undefined ? formatStatementCell(row.pl) : '-'}
                     </td>
-                    <td data-label="Balance" className="statement-amount-cell">{row.balance || '-'}</td>
+                    <td data-label="Balance" className={`statement-amount-cell statement-balance-cell ${Number(row.balance) < 0 ? 'is-negative' : ''}`}>
+                      {row.balance !== '' && row.balance !== null && row.balance !== undefined ? formatStatementCell(row.balance) : '-'}
+                    </td>
                     <td data-label="From -> To">{row.flow}</td>
                   </tr>
                 ))}
