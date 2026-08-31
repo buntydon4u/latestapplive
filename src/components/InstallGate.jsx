@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 
 const PREPARE_TIME_MS = 5500;
+const INSTALL_FLAG_KEY = 'xch555_install_completed_v1';
 
 function isStandalone() {
   return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-function isIos() {
-  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
 function isMobileDevice() {
@@ -19,10 +16,17 @@ function isMobileDevice() {
   );
 }
 
+function defaultInstallMessage() {
+  return 'Installation was not completed. Confirm installation to finish setup.';
+}
+
 export default function InstallGate({ children }) {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [stage, setStage] = useState('landing');
-  const [installed, setInstalled] = useState(isStandalone);
+  const [installed, setInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return isStandalone() || window.localStorage.getItem(INSTALL_FLAG_KEY) === '1';
+  });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -32,9 +36,10 @@ export default function InstallGate({ children }) {
     }
 
     function handleInstalled() {
+      window.localStorage.setItem(INSTALL_FLAG_KEY, '1');
       setInstalled(true);
       setStage('ready');
-      setMessage('Close this browser tab and launch XCH555 from its new home-screen icon.');
+      setMessage('Close this browser tab and launch bull99exch from its new home-screen icon.');
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -45,6 +50,12 @@ export default function InstallGate({ children }) {
     };
   }, []);
 
+  function completeInstall(nextMessage) {
+    window.localStorage.setItem(INSTALL_FLAG_KEY, '1');
+    setInstalled(true);
+    setMessage(nextMessage);
+  }
+
   function prepareApp() {
     setStage('preparing');
     setMessage('');
@@ -53,48 +64,51 @@ export default function InstallGate({ children }) {
 
   async function requestInstall() {
     if (!installPrompt) {
-      setMessage(
-        isIos()
-          ? 'Open the device Share menu and choose Add to Home Screen to confirm installation.'
-          : 'Tap the three dots (⋮) at the top right, then tap Install app.'
-      );
+      completeInstall('Opening bull99exch now...');
       return;
     }
 
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    setInstallPrompt(null);
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      setInstallPrompt(null);
 
-    if (choice.outcome === 'accepted') {
-      setInstalled(true);
-      setMessage('Close this browser tab and launch XCH555 from its new home-screen icon.');
-    } else {
-      setMessage('Installation was not completed. Confirm installation to finish setup.');
+      if (choice.outcome === 'accepted') {
+        completeInstall('Close this browser tab and launch bull99exch from its new home-screen icon.');
+      } else {
+        completeInstall(defaultInstallMessage());
+      }
+    } catch {
+      completeInstall('Opening bull99exch now...');
     }
   }
 
-  if (isStandalone() || !isMobileDevice()) return children;
+  if (installed || !isMobileDevice()) return children;
 
   return (
     <main className="install-gate">
       <section className="install-card" aria-live="polite">
-        <img className="install-logo" src="/pwa-192x192.png" alt="XCH555" />
+        <img className="install-logo" src="/pwa-192x192.png" alt="bull99exch" />
 
         {stage === 'landing' && (
           <>
-            <p className="install-eyebrow">XCH555</p>
-            <h1>Install XCH555</h1>
-            <p className="install-copy">Set up XCH555 on this device to continue.</p>
-            <button className="install-primary" type="button" onClick={prepareApp}>Install</button>
+            <p className="install-eyebrow">bull99exch</p>
+            <h1>Install bull99exch</h1>
+            <p className="install-copy">Set up bull99exch on this device to continue.</p>
+            <button className="install-primary" type="button" onClick={prepareApp}>
+              Install
+            </button>
           </>
         )}
 
         {stage === 'preparing' && (
           <>
             <div className="install-spinner" aria-hidden="true" />
-            <h1>Installing XCH555</h1>
-            <p className="install-copy">Please wait while installation is prepared…</p>
-            <div className="install-progress"><span /></div>
+            <h1>Installing bull99exch</h1>
+            <p className="install-copy">Please wait while installation is prepared...</p>
+            <div className="install-progress">
+              <span />
+            </div>
           </>
         )}
 
@@ -104,7 +118,7 @@ export default function InstallGate({ children }) {
             <h1>{installed ? 'Installation complete' : 'Ready to install'}</h1>
             <p className="install-copy">
               {installed
-                ? 'XCH555 has been added to your device.'
+                ? 'bull99exch has been added to your device.'
                 : 'Confirm installation on your device to complete the setup.'}
             </p>
             {message && <p className="install-message">{message}</p>}

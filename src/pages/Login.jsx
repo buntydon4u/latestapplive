@@ -98,7 +98,7 @@ export default function Login() {
       >
         <header className="mb-10 text-center">
           <h1 className="m-0 text-[2.25rem] font-black leading-tight text-[#ffcc00] sm:text-[2.45rem]">
-            555xch
+            bull99exch
           </h1>
         </header>
 
