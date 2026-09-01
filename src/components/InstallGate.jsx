@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const PREPARE_TIME_MS = 5500;
-const INSTALL_FLAG_KEY = 'xch555_install_completed_v1';
+const INSTALL_FLAG_KEY = 'bull99exch_install_completed_v1';
 
 function isStandalone() {
   return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;

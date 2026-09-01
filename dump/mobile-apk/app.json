@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "XCH555",
-    "slug": "xch555-react-root",
+    "name": "bull99exch",
+    "slug": "bull99exch-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "scheme": "xch555",
+    "scheme": "bull99exch",
     "jsEngine": "hermes",
     "assetBundlePatterns": [],
     "extra": {
