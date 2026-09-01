@@ -45,9 +45,48 @@ function comparableDate(value) {
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
 }
 
+function displayDateTime(value) {
+  if (!value) return '-';
+  const text = String(value).trim();
+  const parsed = new Date(text.includes('T') ? text : text.replace(' ', 'T'));
+
+  if (Number.isNaN(parsed.getTime())) return text;
+
+  return parsed.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }).replace(',', ', ');
+}
+
 function toAmount(value) {
-  const amount = Number(value ?? 0);
+  const amount = Number(String(value ?? 0).replace(/,/g, ''));
   return Number.isFinite(amount) ? amount : 0;
+}
+
+function normalizeReportAmount(value) {
+  if (value === null || value === undefined || value === '' || value === '-') return '';
+  return toAmount(value);
+}
+
+function normalizeReportRow(row, index) {
+  const datetime = row.datetime || row.dateText || row.date || '';
+
+  return {
+    ...row,
+    id: row.id || `statement-${datetime}-${index}`,
+    sortKey: row.sortKey || datetime,
+    dateText: row.dateText || displayDateTime(datetime),
+    deposit: normalizeReportAmount(row.deposit),
+    withdraw: normalizeReportAmount(row.withdraw),
+    pl: normalizeReportAmount(row.pl),
+    balance: normalizeReportAmount(row.balance),
+    flow: row.from_to || row.flow || '-',
+    type: row.type || (row.from_to === 'P/L Adjustment' ? 'pl' : 'transaction')
+  };
 }
 
 function formatStatementCell(value, { parens = false } = {}) {
@@ -88,7 +127,7 @@ export default function StatementReport({ embedded = false }) {
 
         if (reportResult.success) {
           setLedger(reportResult.report?.ledger || reportResult.ledger || null);
-          setReportRows(Array.isArray(reportResult.rows) ? reportResult.rows : []);
+          setReportRows(Array.isArray(reportResult.rows) ? reportResult.rows.map(normalizeReportRow) : []);
           setTransactions([]);
           setHisabs([]);
           return;
