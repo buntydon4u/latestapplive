@@ -19,6 +19,8 @@ function MainApp() {
       <WebView
         source={{ uri: WEB_APP_URL }}
         style={styles.webview}
+        cacheEnabled={false}
+        cacheMode="LOAD_NO_CACHE"
         javaScriptEnabled
         domStorageEnabled
         sharedCookiesEnabled
