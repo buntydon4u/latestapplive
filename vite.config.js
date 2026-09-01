@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => {
       react()
     ],
     server: {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      },
       proxy: {
         '/api': {
           target: phpTarget,
@@ -23,6 +28,13 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: true
         }
+      }
+    },
+    preview: {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
       }
     }
   };
