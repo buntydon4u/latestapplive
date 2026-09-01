@@ -64,6 +64,7 @@ export default function StatementReport({ embedded = false }) {
   const [reportRows, setReportRows] = useState([]);
   const [draftRange, setDraftRange] = useState(defaultRange);
   const [range, setRange] = useState(defaultRange);
+  const [rangeRequestKey, setRangeRequestKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
 
@@ -123,7 +124,7 @@ export default function StatementReport({ embedded = false }) {
     return () => {
       active = false;
     };
-  }, [range.end, range.start, user?.id]);
+  }, [range.end, range.start, rangeRequestKey, user?.id]);
 
   const partyName = ledger?.ledger_name || user?.ledger_name || user?.name || user?.username || '-';
   const rangeLabel = `${displayDate(range.start)} - ${displayDate(range.end)}`;
@@ -201,12 +202,14 @@ export default function StatementReport({ embedded = false }) {
 
   function applyRange() {
     setRange(draftRange);
+    setRangeRequestKey((current) => current + 1);
   }
 
   function resetRange() {
     const nextRange = defaultRange();
     setDraftRange(nextRange);
     setRange(nextRange);
+    setRangeRequestKey((current) => current + 1);
   }
 
   return (
