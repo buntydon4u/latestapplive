@@ -62,14 +62,19 @@ function normalizeResponse(json, fallbackStatus) {
 }
 
 async function request(path, options = {}) {
-  const url = buildUrl(path, options.params);
+  const url = buildUrl(path, {
+    ...(options.params || {}),
+    _ts: Date.now()
+  });
   const token = options.parentAuth ? getParentToken() : getToken();
 
   const init = {
     method: options.method || 'GET',
-    cache: options.cache || 'default',
+    cache: 'no-store',
     headers: {
       Accept: 'application/json',
+      'Cache-Control': 'no-cache, no-store, max-age=0',
+      Pragma: 'no-cache',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     }
@@ -179,8 +184,7 @@ export const api = {
   },
   hisabTillDateReport: async (params) => {
     const result = await request('hisabs/report', {
-      cache: 'no-store',
-      params: { ...params, _ts: Date.now() }
+      params
     });
     const report = result.data && typeof result.data === 'object' ? result.data : {};
     return {
