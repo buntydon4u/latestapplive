@@ -1,7 +1,8 @@
 import { ActivityIndicator, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { MOBILE_WEBVIEW_HTML } from './mobile-webview-html';
 import WebPhoneFrame from './components/WebPhoneFrame';
+
+const WEB_APP_URL = 'https://ubiquitous-dolphin-d5d38e.netlify.app';
 
 export default function App() {
   return (
@@ -16,7 +17,7 @@ function MainApp() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <WebView
-        source={{ html: MOBILE_WEBVIEW_HTML, baseUrl: 'https://new.bull99exch.com/' }}
+        source={{ uri: WEB_APP_URL }}
         style={styles.webview}
         javaScriptEnabled
         domStorageEnabled
