@@ -178,7 +178,10 @@ export const api = {
     return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
   },
   hisabTillDateReport: async (params) => {
-    const result = await request('hisabs/report', { params });
+    const result = await request('hisabs/report', {
+      cache: 'no-store',
+      params: { ...params, _ts: Date.now() }
+    });
     const report = result.data && typeof result.data === 'object' ? result.data : {};
     return {
       ...result,
