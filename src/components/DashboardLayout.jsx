@@ -95,10 +95,7 @@ function AuthHeader({ activePage, onNavigate, onMenu }) {
           <span>W</span>
           <b>{formatMoney(balance)}</b>
         </button>
-        <button className="header-icon notification" type="button" aria-label="Notifications">
-          !
-          <small>1</small>
-        </button>
+        {/* Notifications are temporarily disabled. */}
       </div>
       <span className="screen-reader-only">{activePage}</span>
     </header>

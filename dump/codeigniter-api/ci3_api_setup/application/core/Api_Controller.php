@@ -13,7 +13,18 @@ class Api_Controller extends CI_Controller
         date_default_timezone_set('Asia/Kolkata');
         $this->output->set_content_type('application/json', 'utf-8');
 
-        header('Access-Control-Allow-Origin: *');
+        $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+        $allowed_origins = array(
+            'https://app.bull99exch.com',
+            'https://new.bull99exch.com',
+            'http://localhost:5173'
+        );
+
+        if (in_array($origin, $allowed_origins, true)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+        }
+
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
         header('Access-Control-Max-Age: 86400');

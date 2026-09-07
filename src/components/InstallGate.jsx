@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const PREPARE_TIME_MS = 5500;
-const INSTALL_FLAG_KEY = 'bull99exch_install_completed_v1';
+const INSTALL_FLAG_KEY = 'bull99exch_install_completed_v2';
 
 function isStandalone() {
   return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -27,6 +27,7 @@ export default function InstallGate({ children }) {
     if (typeof window === 'undefined') return false;
     return isStandalone() || window.localStorage.getItem(INSTALL_FLAG_KEY) === '1';
   });
+  const [keepInstallScreen, setKeepInstallScreen] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function InstallGate({ children }) {
     function handleInstalled() {
       window.localStorage.setItem(INSTALL_FLAG_KEY, '1');
       setInstalled(true);
+      setKeepInstallScreen(true);
       setStage('ready');
       setMessage('Close this browser tab and launch bull99exch from its new home-screen icon.');
     }
@@ -53,6 +55,8 @@ export default function InstallGate({ children }) {
   function completeInstall(nextMessage) {
     window.localStorage.setItem(INSTALL_FLAG_KEY, '1');
     setInstalled(true);
+    setKeepInstallScreen(true);
+    setStage('ready');
     setMessage(nextMessage);
   }
 
@@ -64,7 +68,7 @@ export default function InstallGate({ children }) {
 
   async function requestInstall() {
     if (!installPrompt) {
-      completeInstall('Opening bull99exch now...');
+      completeInstall('bull99exch has been added to your device.');
       return;
     }
 
@@ -76,14 +80,14 @@ export default function InstallGate({ children }) {
       if (choice.outcome === 'accepted') {
         completeInstall('Close this browser tab and launch bull99exch from its new home-screen icon.');
       } else {
-        completeInstall(defaultInstallMessage());
+        setMessage(defaultInstallMessage());
       }
     } catch {
-      completeInstall('Opening bull99exch now...');
+      setMessage(defaultInstallMessage());
     }
   }
 
-  if (installed || !isMobileDevice()) return children;
+  if ((installed && !keepInstallScreen) || !isMobileDevice()) return children;
 
   return (
     <main className="install-gate">

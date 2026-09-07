@@ -10,6 +10,26 @@ function getShiftTime(shift, keys) {
   return '';
 }
 
+function getMarketInitials(name) {
+  const normalizedName = String(name || '').trim().toLowerCase();
+  const staticInitials = {
+    faridabad: 'FD',
+    gaziyabad: 'GB',
+    gali: 'GL',
+    disawer: 'DS'
+  };
+
+  if (staticInitials[normalizedName]) return staticInitials[normalizedName];
+
+  return normalizedName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+}
+
 function formatTime(value) {
   if (!value) return '--';
   const raw = String(value).trim();
@@ -31,7 +51,7 @@ function formatTime(value) {
 
 function normalizeMarket(shift) {
   const closeTime = getShiftTime(shift, ['app_time', 'close_time', 'closing_time', 'time_limit', 'end_time', 'time_limit_display']);
-  const resultTime = getShiftTime(shift, ['super_admin', 'result_time', 'open_time', 'draw_time', 'resultTime']);
+  const resultTime = getShiftTime(shift, ['app_result_time', 'super_admin', 'result_time', 'open_time', 'draw_time', 'resultTime']);
   const timestamp = Number(shift.time_limit_timestamp || shift.close_timestamp || 0);
   const isOpen = shift.isOpen ?? shift.is_open ?? !shift.expired;
 
@@ -150,7 +170,7 @@ function GameMarketCard({ market, transaction, onPlay }) {
   return (
     <article className="game-market-card">
       <div className="market-emblem">
-        {market.logo ? <img src={market.logo} alt="" /> : <span>{String(market.name).slice(0, 2).toUpperCase()}</span>}
+        {market.logo ? <img src={market.logo} alt="" /> : <span>{getMarketInitials(market.name)}</span>}
       </div>
       <div className="market-copy">
         <h3>{market.name}</h3>

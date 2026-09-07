@@ -280,7 +280,7 @@ function EntryRows({ rows, setRows }) {
           <div className="entry-row" key={`${row.number}-${index}`}>
             <input value={row.number} maxLength="4" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, number: sanitizeEntryNumber(event.target.value) } : item))} />
             <input value={row.amount} inputMode="numeric" onChange={(event) => setRows((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, amount: event.target.value.replace(/\D/g, '') } : item))} />
-            <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
+            <button type="button" className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
           </div>
         ))}
         {!rows.length ? <p className="empty-state">No entries prepared.</p> : null}
@@ -351,7 +351,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
               placeholder="Amount"
               onChange={(event) => updateRow(index, 'amount', event.target.value.replace(/\D/g, ''))}
             />
-            <button className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
+            <button type="button" className="icon-button danger" title="Delete row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>X</button>
           </div>
         ))}
         <div className="entry-row">
@@ -376,7 +376,7 @@ function ManualEntryRows({ rows, setRows, draft, setDraft, setNotice }) {
               }
             }}
           />
-          <button className="icon-button" title="Add row" onClick={addDraftRow}>+</button>
+          <button type="button" className="icon-button" title="Add row" onClick={addDraftRow}>+</button>
         </div>
       </div>
     </section>
@@ -421,7 +421,7 @@ function JantriGrid({ grid, setGrid, onBuild }) {
           </label>
         ))}
       </div>
-      <button className="primary-button" onClick={onBuild}>Done</button>
+      <button type="button" className="primary-button" onClick={onBuild}>Done</button>
     </section>
   );
 }
@@ -439,7 +439,9 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
   const [grid, setGrid] = useState({});
   const [notice, setNotice] = useState('');
   const [invalidNumAkharStatements, setInvalidNumAkharStatements] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const numAkharTextareaRef = useRef(null);
+  const submitLockRef = useRef(false);
   const ledgerId = user?.id;
   const currentDateDisplay = todayDisplay();
 
@@ -558,38 +560,46 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
   }
 
   async function submit() {
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    setIsSubmitting(true);
     setNotice('');
-    if (!ledgerId || !meta.shift) {
-      setNotice('Select shift before submitting.');
-      return;
-    }
-    if (selectedShiftExpired()) {
-      setNotice('Selected shift is expired.');
-      return;
-    }
-    const draftRow = active === 'Entry' ? getManualDraftRow() : null;
-    const rowsForSubmit = draftRow ? [...rows, draftRow] : rows;
+    try {
+      if (!ledgerId || !meta.shift) {
+        setNotice('Select shift before submitting.');
+        return;
+      }
+      if (selectedShiftExpired()) {
+        setNotice('Selected shift is expired.');
+        return;
+      }
+      const draftRow = active === 'Entry' ? getManualDraftRow() : null;
+      const rowsForSubmit = draftRow ? [...rows, draftRow] : rows;
 
-    if (!rowsForSubmit.length) {
-      setNotice('Enter number and amount before submitting.');
-      return;
-    }
+      if (!rowsForSubmit.length) {
+        setNotice('Enter number and amount before submitting.');
+        return;
+      }
 
-    const payload = {
-      party: ledgerId,
-      shift: meta.shift,
-      dateoftrnforapponly: todayDisplay(),
-      dateoftrn: todayIso(),
-      trn_number: rowsForSubmit.map((row) => row.number),
-      trn_amount: rowsForSubmit.map((row) => row.amount)
-    };
+      const payload = {
+        party: ledgerId,
+        shift: meta.shift,
+        dateoftrnforapponly: todayDisplay(),
+        dateoftrn: todayIso(),
+        trn_number: rowsForSubmit.map((row) => row.number),
+        trn_amount: rowsForSubmit.map((row) => row.amount)
+      };
 
-    const result = await api.submitTransaction(payload);
-    setNotice(result.success ? 'Entry submitted.' : (result.error || 'Submission failed.'));
-    if (result.success) {
-      setRows([]);
-      setManualDraft({ number: '', amount: '' });
-      refreshBalance();
+      const result = await api.submitTransaction(payload);
+      setNotice(result.success ? 'Entry submitted.' : (result.error || 'Submission failed.'));
+      if (result.success) {
+        setRows([]);
+        setManualDraft({ number: '', amount: '' });
+        refreshBalance();
+      }
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
     }
   }
 
@@ -614,7 +624,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       </section>
 
       <div className="tabs">
-        {tabs.map((tab) => <button key={tab} className={active === tab ? 'active' : ''} onClick={() => setActive(tab)}>{tab}</button>)}
+        {tabs.map((tab) => <button key={tab} type="button" className={active === tab ? 'active' : ''} onClick={() => setActive(tab)}>{tab}</button>)}
       </div>
 
       {active === 'Num-Akhar' && (
@@ -626,7 +636,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
             onChange={(event) => setText(event.target.value)}
             placeholder="Example: 1,2,3*10 or 11,22(100)"
           />
-          <button className="primary-button" onClick={handleParseNumAkhar}>Done</button>
+          <button type="button" className="primary-button" onClick={handleParseNumAkhar}>Done</button>
 
           {invalidNumAkharStatements.length > 0 && (
             <div className="invalid-statements-panel">
@@ -653,7 +663,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           <input placeholder="From" value={range.from} onChange={(event) => setRange((current) => ({ ...current, from: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="To" value={range.to} onChange={(event) => setRange((current) => ({ ...current, to: event.target.value.replace(/\D/g, '') }))} />
           <input placeholder="Amount" value={range.amount} onChange={(event) => setRange((current) => ({ ...current, amount: event.target.value.replace(/\D/g, '') }))} />
-          <button className="primary-button" onClick={handleBuildRange}>Done</button>
+          <button type="button" className="primary-button" onClick={handleBuildRange}>Done</button>
         </section>
       )}
 
@@ -666,7 +676,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
             <option value="Yes">Joda yes</option>
             <option value="No">Joda no</option>
           </select>
-          <button className="primary-button" onClick={handleBuildCross}>Done</button>
+          <button type="button" className="primary-button" onClick={handleBuildCross}>Done</button>
         </section>
       )}
 
@@ -677,6 +687,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
         <div className="submit-bar">
           {notice ? <span className="notice">{notice}</span> : <span />}
           <button
+            type="button"
             className="secondary-button"
             onClick={() => {
               setRows([]);
@@ -685,7 +696,9 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
           >
             Reset
           </button>
-          <button className="primary-button" onClick={submit}>Submit Entry</button>
+          <button type="button" className="primary-button" onClick={submit} disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit Entry'}
+          </button>
         </div>
       )}
     </div>

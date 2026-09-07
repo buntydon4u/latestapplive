@@ -58,3 +58,7 @@ $route['api/v1/hisabs/report']['options'] = 'api/v1/Hisabs/report';
 
 $route['api/v1/results/latest']['get'] = 'api/v1/Results/latest';
 $route['api/v1/results/latest']['options'] = 'api/v1/Results/latest';
+$route['api/v1/ledger-till-date-reports']['post'] =
+    'api/v1/Results/ledger_till_date_reports_api';
+$route['api/v1/ledger-till-date-reports']['options'] =
+    'api/v1/Results/ledger_till_date_reports_api';

@@ -1,4 +1,4 @@
-const API_ROOT = import.meta.env.VITE_API_ROOT || '/index.php/api/v1';
+const API_ROOT = import.meta.env.VITE_API_ROOT || 'https://new.bull99exch.com/index.php/api/v1';
 
 const TOKEN_KEY = 'ci3_api_token';
 const PARENT_TOKEN_KEY = 'ci3_parent_selection_token';
@@ -62,10 +62,7 @@ function normalizeResponse(json, fallbackStatus) {
 }
 
 async function request(path, options = {}) {
-  const url = buildUrl(path, {
-    ...(options.params || {}),
-    _ts: Date.now()
-  });
+  const url = buildUrl(path, options.params);
   const token = options.parentAuth ? getParentToken() : getToken();
 
   const init = {
@@ -73,15 +70,19 @@ async function request(path, options = {}) {
     cache: 'no-store',
     headers: {
       Accept: 'application/json',
-      'Cache-Control': 'no-cache, no-store, max-age=0',
-      Pragma: 'no-cache',
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.formEncoded
+        ? { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+        : options.body
+          ? { 'Content-Type': 'application/json' }
+          : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     }
   };
 
   if (options.body) {
-    init.body = JSON.stringify(options.body);
+    init.body = options.formEncoded
+      ? new URLSearchParams(options.body).toString()
+      : JSON.stringify(options.body);
   }
 
   const response = await fetch(url.toString(), init);
@@ -100,7 +101,11 @@ async function request(path, options = {}) {
 export const api = {
   login: async (username, password) => {
     clearTokens();
-    const result = await request('login', { method: 'POST', body: { username, password } });
+    const result = await request('login', {
+      method: 'POST',
+      body: { username, password },
+      formEncoded: true
+    });
 
     if (result.success && result.token) {
       if (result.parent_selection_required) {
@@ -181,6 +186,25 @@ export const api = {
   hisabs: async () => {
     const result = await request('hisabs');
     return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
+  },
+  ledgerTillDateReport: async (params) => {
+    const result = await request('ledger-till-date-reports', {
+      method: 'POST',
+      body: params
+    });
+
+    const report = result.data && typeof result.data === 'object' ? result.data : {};
+    const today = Array.isArray(report.today) ? report.today : [];
+    const before = Array.isArray(report.before) ? report.before : [];
+
+    return {
+      ...result,
+      report,
+      today,
+      before,
+      rows: [...today, ...before],
+      summary: report.summary || {}
+    };
   },
   hisabTillDateReport: async (params) => {
     const result = await request('hisabs/report', {

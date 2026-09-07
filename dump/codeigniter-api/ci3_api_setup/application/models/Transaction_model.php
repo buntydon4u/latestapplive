@@ -131,7 +131,7 @@ class Transaction_model extends CI_Model
     public function list_for_ledger($ledger_id, $user_type = 'ledger')
     {
         $rows = $this->db
-            ->select('tbl_master_transaction.id, tbl_agent.agent_name, tbl_trans_numbers.created_date AS createddate, tbl_trans_numbers.modified_date AS modifieddate, tbl_master_transaction.t_date, tbl_master_transaction.total_number_amount, tbl_master_transaction.created_date, tbl_master_transaction.party_id, tbl_shift.id AS shiftid, user_shift_timings.app_time, tbl_shift.shift_name, user_shift_timings.open_date, tbl_shift.super_admin, tbl_shift.data_entry_operator, tbl_shift.id AS shift_id, tbl_ledger.ledger_name, tbl_trans_numbers.number AS trnno, tbl_trans_numbers.amount AS trn_amt')
+            ->select('tbl_master_transaction.id, tbl_agent.agent_name, tbl_master_transaction.t_date, tbl_master_transaction.total_number_amount, tbl_master_transaction.created_date, tbl_master_transaction.party_id, tbl_shift.id AS shiftid, user_shift_timings.app_time, tbl_shift.shift_name, user_shift_timings.open_date, tbl_shift.super_admin, tbl_shift.data_entry_operator, tbl_shift.id AS shift_id, tbl_ledger.ledger_name, COALESCE(SUM(CAST(tbl_trans_numbers.amount AS DECIMAL(10,2))), 0) AS total_amount')
             ->from('tbl_master_transaction')
             ->join('user_shift_timings', 'user_shift_timings.id = tbl_master_transaction.shift_id')
             ->join('tbl_shift', 'tbl_shift.id = user_shift_timings.shift_id')
@@ -140,9 +140,15 @@ class Transaction_model extends CI_Model
             ->join('tbl_agent', 'tbl_ledger.agent_id = tbl_agent.id', 'left')
             ->where('tbl_master_transaction.t_date >= NOW() - INTERVAL 30 DAY', null, false)
             ->where('tbl_master_transaction.party_id', (int) $ledger_id)
+            ->group_by('tbl_master_transaction.id')
             ->order_by('tbl_master_transaction.id', 'DESC')
             ->get()
             ->result_array();
+
+        log_message('debug', 'transactions history SQL: ' . $this->db->last_query());
+        log_message('debug', 'transactions history master IDs: ' . implode(',', array_map(function ($row) {
+            return (string) $row['id'];
+        }, $rows)));
 
         $transactions = array();
         $now = time();
@@ -165,16 +171,13 @@ class Transaction_model extends CI_Model
                 ? ($now >= $start && $now <= $end)
                 : ($now < $limit && date('Y-m-d', $now) === $t_date);
 
-            $amounts = explode(',', (string) $row['trn_amt']);
-            $total = array_sum(array_map('floatval', $amounts));
-
             $transactions[] = array(
                 'id' => (int) $row['id'],
                 't_date' => $row['t_date'],
                 'display_date' => date('d M, Y', strtotime($row['t_date'])),
                 'shift_name' => $row['shift_name'],
                 'ledger_name' => $row['ledger_name'],
-                'total_amount' => $total,
+                'total_amount' => (float) $row['total_amount'],
                 'can_delete' => $can_delete,
                 'shift_id' => (int) $row['shiftid']
             );

@@ -1268,6 +1268,76 @@ footer {
   color: #73e6b6;
 }
 
+.hisab-legacy-summary-panel {
+  padding: 16px 18px 18px;
+  border: 1px solid rgba(185, 151, 25, 0.18);
+  border-radius: 14px;
+  background: var(--premium-card);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.hisab-legacy-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hisab-legacy-summary-heading h3 {
+  margin: 6px 0 0;
+  color: var(--premium-text);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.hisab-legacy-summary-heading p {
+  margin: 6px 0 0;
+  color: var(--premium-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.hisab-legacy-summary {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.hisab-legacy-summary tr:nth-child(odd) th,
+.hisab-legacy-summary tr:nth-child(odd) td {
+  background: rgba(20, 12, 34, 0.98);
+}
+
+.hisab-legacy-summary tr:nth-child(even) th,
+.hisab-legacy-summary tr:nth-child(even) td {
+  background: rgba(27, 16, 45, 0.98);
+}
+
+.hisab-legacy-summary th,
+.hisab-legacy-summary td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.hisab-legacy-summary th {
+  width: 24%;
+  color: var(--premium-gold);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hisab-legacy-summary td {
+  width: 26%;
+  color: var(--premium-text);
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .hisab-notice {
   border-radius: 12px;
   border: 1px solid rgba(220, 38, 38, 0.2);
@@ -3862,6 +3932,42 @@ footer {
 
   .hisab-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hisab-legacy-summary-panel {
+    padding: 14px 14px 16px;
+  }
+
+  .hisab-legacy-summary-heading {
+    flex-direction: column;
+  }
+
+  .hisab-legacy-summary th,
+  .hisab-legacy-summary td {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+  }
+
+  .hisab-legacy-summary tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .hisab-legacy-summary tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .hisab-legacy-summary th {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hisab-legacy-summary td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .hisab-report-table {
