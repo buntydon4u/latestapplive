@@ -9,7 +9,6 @@ class Results extends Api_Controller
     {
         parent::__construct();
         $this->load->model('Result_model');
-        $this->load->model('Tbl_openno_model');
     }
 
     public function ledger_till_date_reports_api()
@@ -31,6 +30,17 @@ class Results extends Api_Controller
         ? trim((string) $input['date'])
         : date('Y-m-d');
 
+    // An empty form value is equivalent to an omitted date.
+    if ($report_date === '') {
+        $report_date = date('Y-m-d');
+    }
+
+    // Accept both legacy d-m-Y links and the ISO date used by the React page.
+    $legacy_date = DateTime::createFromFormat('!d-m-Y', $report_date);
+    if ($legacy_date instanceof DateTime && $legacy_date->format('d-m-Y') === $report_date) {
+        $report_date = $legacy_date->format('Y-m-d');
+    }
+
     if ($ledger_id === '' || $report_date === '' || strtotime($report_date) === FALSE) {
         return $this->output
             ->set_status_header(400)
@@ -46,8 +56,10 @@ class Results extends Api_Controller
         'date' => $report_date
     );
 
-    $result = $this->Tbl_openno_model
+    $result = $this->Result_model
         ->ledger_till_date_result_today_api($params);
+
+    $result['selected_date'] = $report_date;
 
     return $this->output
         ->set_status_header(200)

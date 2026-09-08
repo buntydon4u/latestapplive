@@ -6,7 +6,7 @@ class Hisab_model extends CI_Model
     public function list_for_ledger($ledger_id, $updated_by)
     {
         $rows = $this->db
-            ->select('date, today_hisab')
+            ->select('date, date AS selected_date, today_hisab')
             ->where('ledger_id', (int) $ledger_id)
             ->order_by("STR_TO_DATE(date, '%d-%m-%Y')", 'DESC', false)
             ->get('tbl_final_hisab')

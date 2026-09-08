@@ -48,13 +48,19 @@ function AppRoutes() {
   function navigate(page, options = {}) {
     setActivePage(page);
     const path = pagePaths[page];
-    if (path && window.location.pathname !== path) {
+    if (path) {
       const search = options.search instanceof URLSearchParams
         ? `?${options.search.toString()}`
         : options.search
           ? `?${new URLSearchParams(options.search).toString()}`
           : '';
-      window.history.pushState({ page, ...options }, '', `${path}${search}`);
+      const nextUrl = `${path}${search}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+      if (currentUrl !== nextUrl) {
+        window.history.pushState({ page, ...options }, '', nextUrl);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
     }
   }
 

@@ -185,7 +185,15 @@ export const api = {
   transactionDetails: (id) => request(`transactions/${id}`),
   hisabs: async () => {
     const result = await request('hisabs');
-    return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
+    const hisabs = Array.isArray(result.data) ? result.data : [];
+    return {
+      ...result,
+      hisabs: hisabs.map((row) => ({
+        ...row,
+        date: row.date || row.Date || row.hisab_date || row.selected_date || row.t_date || '',
+        dateIso: row.date || row.Date || row.hisab_date || row.selected_date || row.t_date || ''
+      }))
+    };
   },
   ledgerTillDateReport: async (params) => {
     const result = await request('ledger-till-date-reports', {

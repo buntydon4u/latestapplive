@@ -20,7 +20,18 @@ function toIsoDate(value) {
     return `${legacy[3]}-${legacy[2]}-${legacy[1]}`;
   }
 
-  const parsed = new Date(text);
+  const slashDate = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashDate) {
+    return `${slashDate[3]}-${slashDate[2]}-${slashDate[1]}`;
+  }
+
+  const shortYear = text.match(/^(\d{2})-(\d{2})-(\d{2})$/);
+  if (shortYear) {
+    const year = Number(shortYear[3]) >= 70 ? `19${shortYear[3]}` : `20${shortYear[3]}`;
+    return `${year}-${shortYear[2]}-${shortYear[1]}`;
+  }
+
+  const parsed = new Date(text.includes('/') ? text.replace(/\//g, '-') : text);
   if (Number.isNaN(parsed.getTime())) return '';
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
 }
@@ -41,9 +52,23 @@ function displayDate(value) {
 
 function readQuery() {
   const params = new URLSearchParams(window.location.search);
+
+  if (!params.toString() && window.history.state?.search) {
+    const stateParams = window.history.state.search instanceof URLSearchParams
+      ? window.history.state.search
+      : new URLSearchParams(String(window.history.state.search));
+    stateParams.forEach((value, key) => params.set(key, value));
+  }
+
+  const date = params.get('date')
+    || params.get('selected_date')
+    || params.get('selectedDate')
+    || params.get('hisab_date')
+    || '';
+
   return {
     ledger_id: params.get('ledger_id') || '',
-    date: params.get('date') || '',
+    date,
     master: params.get('master') || ''
   };
 }
@@ -73,7 +98,15 @@ function pickValue(row, keys, fallback = '--') {
 }
 
 function normalizeLedgerRow(row, index, kind, fallbackDate) {
-  const total = toAmount(row?.tamnt ?? row?.finalsum ?? row?.total ?? row?.amount ?? 0);
+  // Desktop ledger_till_date_reports displays the transaction-derived finalsum.
+  const transactionTotal = toAmount(row?.finalsum);
+  const total = transactionTotal || toAmount(
+    row?.Total_Number_amount
+      ?? row?.tamnt
+      ?? row?.total
+      ?? row?.amount
+      ?? 0
+  );
   const debit = toAmount(row?.oamnt ?? row?.debit ?? 0);
   const credit = toAmount(row?.akmnt ?? row?.credit ?? 0);
   const date = row?.Date || row?.date || row?.opendate || fallbackDate || '';
@@ -109,9 +142,17 @@ export default function HisabTillDate({ onNavigate }) {
       setNotice('');
 
       try {
+        const reportDate = toIsoDate(nextQuery.date);
+        if (!reportDate) {
+          setReport(null);
+          setNotice('Selected hisab date is missing. Please return to the hisab list and select a date.');
+          setLoading(false);
+          return;
+        }
+
         const result = await api.ledgerTillDateReport({
           ledger_id: nextQuery.ledger_id || user?.id || '',
-          date: nextQuery.date,
+          date: reportDate,
           master: nextQuery.master || user?.updated_by || ''
         });
 
@@ -137,7 +178,7 @@ export default function HisabTillDate({ onNavigate }) {
     return () => {
       active = false;
     };
-  }, [user?.id, user?.updated_by]);
+  }, [query.date, query.ledger_id, query.master, user?.id, user?.updated_by]);
 
   useEffect(() => {
     function syncFromLocation() {
@@ -149,9 +190,11 @@ export default function HisabTillDate({ onNavigate }) {
   }, []);
 
   const ledger = report?.report?.ledger || report?.ledger || {};
+  const firstTodayRow = Array.isArray(report?.today) ? report.today[0] || {} : {};
   const partyName = pickName(
     ledger.ledger_name,
     ledger.name,
+    firstTodayRow.ledger_name,
     user?.ledger_name,
     user?.name,
     user?.username
@@ -162,9 +205,7 @@ export default function HisabTillDate({ onNavigate }) {
 
   const todayRows = useMemo(() => {
     const rows = Array.isArray(report?.today) ? report.today : [];
-    const fallbackRows = Array.isArray(report?.rows) ? report.rows : [];
-    const sourceRows = rows.length ? rows : fallbackRows;
-    return sourceRows.map((row, index) => normalizeLedgerRow(row, index, 'today', selectedDate));
+    return rows.map((row, index) => normalizeLedgerRow(row, index, 'today', selectedDate));
   }, [report, selectedDate]);
 
   const todayTotals = useMemo(() => {
@@ -176,34 +217,69 @@ export default function HisabTillDate({ onNavigate }) {
     }, { total: 0, debit: 0, credit: 0 });
   }, [todayRows]);
 
-  const commissionRate = todayRows[0]?.rate || toAmount(report?.summary?.commission_rate || 0);
-  const commission = Number((todayTotals.total * commissionRate) / 100);
-  const netBalance = Number(report?.summary?.running_total ?? (todayTotals.total - todayTotals.debit + todayTotals.credit));
-  const closing = Number(report?.summary?.closing ?? netBalance);
-  const payment = Number(todayTotals.debit + todayTotals.credit);
-  const balance = Number(closing - todayTotals.total);
-  const pattiAmount = Number(todayTotals.total * 3);
+  const summary = report?.summary || {};
+  const rawTodayRows = Array.isArray(report?.today) ? report.today : [];
+  // Match the desktop view, which uses the final row's ledger rates after
+  // summing transaction-derived finalsum values for the day.
+  const rateRow = rawTodayRows[rawTodayRows.length - 1] || {};
+  const commissionRate = toAmount(
+    rateRow.ledgerdara_commision
+      ?? rateRow.ledgerdara_commission
+      ?? rateRow.dara_commision
+      ?? summary.commission_rate
+  );
+  const pattiRate = toAmount(
+    rateRow.pattiperc
+      ?? rateRow.patti_rate
+      ?? summary.patti_rate
+  );
+  const hasCommissionRate = rawTodayRows.length > 0
+    && (rateRow.ledgerdara_commision !== undefined
+      || rateRow.ledgerdara_commission !== undefined
+      || rateRow.dara_commision !== undefined
+      || summary.commission_rate !== undefined);
+  const dAmount = toAmount(summary.d_amount ?? todayTotals.debit);
+  const aAmount = toAmount(summary.a_amount ?? todayTotals.credit);
+  const commission = hasCommissionRate
+    ? Math.ceil(todayTotals.total * (commissionRate / 100))
+    : toAmount(summary.commission ?? 0);
+  const total = commission + dAmount + aAmount;
+  const pattiEnabled = String(
+    rateRow.hissa_select ?? summary.hissa_select ?? ''
+  ).toLowerCase() === 'y';
+  const pattiAmount = pattiEnabled
+    ? ((todayTotals.total - (commission + aAmount + dAmount)) * pattiRate) / 100
+    : toAmount(summary.patti_amount ?? 0);
+  const opening = toAmount(summary.opening ?? 0);
+  const totalToday = toAmount(summary.today_hisab ?? todayTotals.total);
+  const payment = toAmount(summary.payment ?? 0);
+  const closing = toAmount(summary.closing ?? 0);
+  const finalTotal = toAmount(summary.final_total ?? totalToday);
 
   const summaryRows = [
     [
       { label: 'Commission', value: formatMoney(commission) },
-      { label: 'Balance', value: formatMoney(balance) }
+      { label: 'D-Amount', value: formatMoney(dAmount) }
     ],
     [
-      { label: 'D-Amount', value: formatMoney(todayTotals.debit) },
-      { label: 'Total Today', value: formatMoney(todayTotals.total) }
+      { label: 'A-Amount', value: formatMoney(aAmount) },
+      { label: 'Total', value: formatMoney(total) }
     ],
     [
-      { label: 'A-Amount', value: formatMoney(todayTotals.credit) },
+      { spacer: true },
+      { spacer: true }
+    ],
+    [
+      { label: 'Patti AMT.', value: formatMoney(pattiAmount) },
+      { label: 'Balance', value: formatMoney(opening) }
+    ],
+    [
+      { label: 'Total Today', value: formatMoney(totalToday) },
       { label: 'Payment', value: formatMoney(payment) }
     ],
     [
-      { label: 'Total', value: formatMoney(commission) },
-      { label: 'Patti AMT.', value: formatMoney(pattiAmount) }
-    ],
-    [
-      { label: 'Final Total', value: formatMoney(todayTotals.total) },
-      { label: 'Closing', value: formatMoney(closing) }
+      { label: 'Closing', value: formatMoney(closing) },
+      { spacer: true }
     ]
   ];
 
@@ -257,48 +333,24 @@ export default function HisabTillDate({ onNavigate }) {
         </article>
         <article className="hisab-summary-card">
           <span>Total Today</span>
-          <b>{formatMoney(todayTotals.total)}</b>
+          <b>{formatMoney(totalToday)}</b>
         </article>
         <article className="hisab-summary-card">
           <span>D-Amount</span>
-          <b>{formatMoney(todayTotals.debit)}</b>
+          <b>{formatMoney(dAmount)}</b>
         </article>
         <article className="hisab-summary-card">
           <span>A-Amount</span>
-          <b>{formatMoney(todayTotals.credit)}</b>
+          <b>{formatMoney(aAmount)}</b>
         </article>
         <article className="hisab-summary-card is-accent">
           <span>Net Balance</span>
-          <b>{formatMoney(netBalance)}</b>
+          <b>{formatMoney(opening)}</b>
         </article>
         <article className="hisab-summary-card is-good">
           <span>Closing</span>
           <b>{formatMoney(closing)}</b>
         </article>
-      </section>
-
-      <section className="panel hisab-legacy-summary-panel">
-        <div className="panel-heading hisab-legacy-summary-heading">
-          <div>
-            <span className="eyebrow">Desktop parity</span>
-            <h3>Hisab summary fields</h3>
-            <p>Same ledger fields shown in the desktop hisab page.</p>
-          </div>
-        </div>
-        <table className="hisab-legacy-summary">
-          <tbody>
-            {summaryRows.map((row, rowIndex) => (
-              <tr key={`hisab-summary-${rowIndex}`}>
-                {row.map((cell) => (
-                  <Fragment key={cell.label}>
-                    <th scope="row">{cell.label}</th>
-                    <td>{cell.value}</td>
-                  </Fragment>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </section>
 
       <section className="panel hisab-report-table-panel">
@@ -334,9 +386,9 @@ export default function HisabTillDate({ onNavigate }) {
 
               <tr className="hisab-total-row">
                 <td colSpan="2" className="hisab-total-label">Totals</td>
-                <td className="hisab-amount-cell">{formatMoney(todayTotals.total)}</td>
-                <td className="hisab-amount-cell">{formatMoney(todayTotals.debit)}</td>
-                <td className="hisab-amount-cell">{formatMoney(todayTotals.credit)}</td>
+                <td className="hisab-amount-cell">{formatMoney(todayTotals.total || summary.total_today || 0)}</td>
+                <td className="hisab-amount-cell">{formatMoney(summary.total_d ?? todayTotals.debit)}</td>
+                <td className="hisab-amount-cell">{formatMoney(summary.total_a ?? todayTotals.credit)}</td>
               </tr>
             </tbody>
           </table>
@@ -348,6 +400,34 @@ export default function HisabTillDate({ onNavigate }) {
             detail="There are no transactions or hisab rows available for the selected date."
           />
         ) : null}
+      </section>
+
+      <section className="panel hisab-legacy-summary-panel">
+        <div className="panel-heading hisab-legacy-summary-heading">
+          <div>
+            <h3>Hisab summary fields</h3>
+            <p>Same ledger fields shown in the desktop hisab page.</p>
+          </div>
+        </div>
+        <table className="hisab-legacy-summary">
+          <tbody>
+            {summaryRows.map((row, rowIndex) => (
+              <tr
+                key={`hisab-summary-${rowIndex}`}
+                className={row[0].spacer ? 'hisab-summary-spacer' : undefined}
+              >
+                {row[0].spacer ? (
+                  <td colSpan="4" aria-hidden="true">&nbsp;</td>
+                ) : row.map((cell) => (
+                  <Fragment key={cell.label}>
+                    <th scope="row">{cell.label}</th>
+                    {cell.spacer ? <td aria-hidden="true" /> : <td>{cell.value}</td>}
+                  </Fragment>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
     </div>
