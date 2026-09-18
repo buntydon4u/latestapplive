@@ -14,6 +14,33 @@ function formatDate(value) {
   }).replace(/^(\d{2} \w{3}) (\d{4})$/, '$1, $2');
 }
 
+function formatFilterDate(value) {
+  if (!value) return '';
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return '';
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function parseFilterDate(value) {
+  const match = String(value || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return '';
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return '';
+  }
+
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
 function shiftId(shift) {
   return String(shift.report_pid || shift.user_shift_timing_id || shift.id || '');
 }
@@ -117,6 +144,7 @@ export default function PartyJantri() {
   const { user } = useAuth();
   const [shifts, setShifts] = useState([]);
   const [filters, setFilters] = useState({ pid: '', date: todayIso() });
+  const [dateInput, setDateInput] = useState(formatFilterDate(todayIso()));
   const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState({ totalAmount: 0, totalRows: 0 });
   const [loadingMeta, setLoadingMeta] = useState(true);
@@ -156,8 +184,18 @@ export default function PartyJantri() {
     setFilters((current) => ({ ...current, [field]: value }));
   }
 
+  function updateDate(value) {
+    setDateInput(value);
+    const parsed = parseFilterDate(value);
+    if (parsed) {
+      updateFilter('date', parsed);
+    }
+  }
+
   function reset() {
-    setFilters({ pid: '', date: todayIso() });
+    const today = todayIso();
+    setFilters({ pid: '', date: today });
+    setDateInput(formatFilterDate(today));
     setRows([]);
     setSummary({ totalAmount: 0, totalRows: 0 });
     setNotice('');
@@ -165,15 +203,17 @@ export default function PartyJantri() {
 
   async function search() {
     setNotice('');
-    if (!filters.pid || !filters.date) {
+    const parsedDate = parseFilterDate(dateInput);
+    if (!filters.pid || !parsedDate) {
       setNotice('Select shift and date before searching.');
       return;
     }
 
     setLoadingReport(true);
     try {
-      const result = await api.jantriPartyReport(filters);
+      const result = await api.jantriPartyReport({ ...filters, date: parsedDate });
       if (result.success) {
+        setFilters((current) => ({ ...current, date: parsedDate }));
         setRows(result.rows);
         setSummary(result.summary);
       } else {
@@ -213,7 +253,12 @@ export default function PartyJantri() {
         </label>
         <label>
           <span>Date</span>
-          <input type="date" value={filters.date} onChange={(event) => updateFilter('date', event.target.value)} />
+          <input
+            inputMode="numeric"
+            placeholder="dd/mm/yyyy"
+            value={dateInput}
+            onChange={(event) => updateDate(event.target.value)}
+          />
         </label>
         <div className="party-jantri-actions">
           <button className="primary-button" onClick={search} disabled={loadingMeta || loadingReport}>Search</button>

@@ -3,6 +3,9 @@ import { api, todayDisplay, todayIso } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const tabs = ['Entry', 'Num-Akhar', 'From-To', 'Cross', 'Jantri'];
+const tabLabels = {
+  'Num-Akhar': 'Copy Paste'
+};
 const akharTokenPattern = String.raw`(?:\d{1,4}|[AB]\d|\d[AB])`;
 const akharSeparatorPattern = String.raw`(?:[\s,!@#$%^&_\-/|.]+)`;
 const akharConnectorPattern = String.raw`(?:\*|\(|=|x|X|\u00d7|\bINTO\b|\bINTU\b|\bIN\b)`;
@@ -624,7 +627,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       </section>
 
       <div className="tabs">
-        {tabs.map((tab) => <button key={tab} type="button" className={active === tab ? 'active' : ''} onClick={() => setActive(tab)}>{tab}</button>)}
+        {tabs.map((tab) => <button key={tab} type="button" className={active === tab ? 'active' : ''} onClick={() => setActive(tab)}>{tabLabels[tab] || tab}</button>)}
       </div>
 
       {active === 'Num-Akhar' && (

@@ -49,6 +49,7 @@ function normalizeResponse(json, fallbackStatus) {
   const dataObject = data && !Array.isArray(data) && typeof data === 'object' ? data : {};
 
   return {
+    ...json,
     ...dataObject,
     data,
     success: ok,
@@ -59,6 +60,31 @@ function normalizeResponse(json, fallbackStatus) {
     logged_in: dataObject.logged_in ?? json?.logged_in ?? false,
     parent_selection_required: dataObject.parent_selection_required ?? json?.parent_selection_required ?? false
   };
+}
+
+export function sanitizePhoneHrefNumber(value) {
+  const raw = String(value || '').trim();
+  const prefix = raw.startsWith('+') ? '+' : '';
+  return `${prefix}${raw.replace(/\D/g, '')}`;
+}
+
+export function sanitizeWhatsappNumber(value) {
+  return String(value || '').replace(/[+\s\-()]/g, '').replace(/\D/g, '');
+}
+
+export function buildHelplineHref(helpline) {
+  const number = helpline?.helpline_number || '';
+  if (!number) return '';
+
+  if (helpline?.helpline_type === 'whatsapp') {
+    const whatsappNumber = sanitizeWhatsappNumber(number);
+    if (!whatsappNumber) return '';
+    const message = encodeURIComponent('Hello, I need help with my account.');
+    return `https://wa.me/${whatsappNumber}?text=${message}`;
+  }
+
+  const phoneNumber = sanitizePhoneHrefNumber(number);
+  return phoneNumber ? `tel:${phoneNumber}` : '';
 }
 
 async function request(path, options = {}) {
@@ -185,7 +211,15 @@ export const api = {
   transactionDetails: (id) => request(`transactions/${id}`),
   hisabs: async () => {
     const result = await request('hisabs');
-    return { ...result, hisabs: Array.isArray(result.data) ? result.data : [] };
+    const hisabs = Array.isArray(result.data) ? result.data : [];
+    return {
+      ...result,
+      hisabs: hisabs.map((row) => ({
+        ...row,
+        date: row.date || row.Date || row.hisab_date || row.selected_date || row.t_date || '',
+        dateIso: row.date || row.Date || row.hisab_date || row.selected_date || row.t_date || ''
+      }))
+    };
   },
   ledgerTillDateReport: async (params) => {
     const result = await request('ledger-till-date-reports', {
@@ -257,6 +291,17 @@ export const api = {
     return { ...result, profile: result.profile || null };
   },
   changeMyPassword: (body) => request('account/change-password', { method: 'POST', body }),
+  masterHelpline: async (user_id) => {
+    const result = await request('master-helpline', { params: { user_id } });
+    const raw = result.data && typeof result.data === 'object' ? result.data : result;
+    const helpline_type = raw.helpline_type === 'whatsapp' ? 'whatsapp' : 'call_only';
+    const helpline = {
+      helpline_number: raw.helpline_number || '',
+      helpline_type,
+      can_whatsapp: helpline_type === 'whatsapp'
+    };
+    return { ...result, helpline };
+  },
   submitTransaction: (body) => request('transactions', { method: 'POST', body }),
   submitJantri: (body) => request('jantri', { method: 'POST', body }),
   deleteTransaction: (id) => request(`transactions/${id}`, { method: 'DELETE' })

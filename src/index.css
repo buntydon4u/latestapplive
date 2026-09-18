@@ -1338,6 +1338,13 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 
+.hisab-legacy-summary .hisab-summary-spacer td {
+  height: 10px;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
 .hisab-notice {
   border-radius: 12px;
   border: 1px solid rgba(220, 38, 38, 0.2);
@@ -2835,6 +2842,27 @@ footer {
   line-height: 1;
 }
 
+.bottom-nav-whatsapp {
+  display: block;
+  width: 24px;
+  height: 24px;
+  fill: #25d366;
+}
+
+.bottom-nav-item.helpline-item,
+.bottom-nav-item.helpline-item:hover,
+.bottom-nav-item.helpline-item:focus,
+.bottom-nav-item.helpline-item:active,
+.bottom-nav-item.helpline-item.active {
+  background: transparent;
+  color: #8d8d8d;
+  box-shadow: none;
+}
+
+.bottom-nav-item.helpline-item span {
+  color: #25d366;
+}
+
 .bottom-nav-item b {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -3090,6 +3118,61 @@ footer {
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+.account-helpline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(185, 151, 25, 0.3);
+  border-radius: 12px;
+  background: rgba(16, 12, 26, 0.78);
+}
+
+.account-helpline div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.account-helpline span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.account-helpline b {
+  color: var(--text);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.helpline-action {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.helpline-action.phone {
+  background: linear-gradient(135deg, #d3a526, #7d5b0e);
+}
+
+.helpline-action.whatsapp {
+  background: linear-gradient(135deg, #21b557, #0f6b39);
+}
+
+.helpline-icon {
+  width: 23px;
+  height: 23px;
+  fill: currentColor;
 }
 
 .account-form-grid {

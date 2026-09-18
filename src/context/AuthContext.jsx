@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [parentSelection, setParentSelection] = useState(null);
   const [showParentSelection, setShowParentSelection] = useState(false);
   const [balance, setBalance] = useState(null);
+  const [helpline, setHelpline] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const refreshBalance = useCallback(async () => {
@@ -18,13 +19,31 @@ export function AuthProvider({ children }) {
     return result;
   }, []);
 
+  const refreshHelpline = useCallback(async (userId) => {
+    try {
+      const result = await api.masterHelpline(userId);
+      if (result.success && result.helpline?.helpline_number) {
+        setHelpline(result.helpline);
+        return result;
+      }
+      setHelpline(null);
+      return result;
+    } catch (error) {
+      setHelpline(null);
+      return { success: false, error: error.message || 'Unable to load helpline.' };
+    }
+  }, []);
+
   const checkSession = useCallback(async () => {
     setLoading(true);
     try {
       const result = await api.session();
       if (result.logged_in) {
         setUser(result.user);
-        await refreshBalance();
+        await Promise.all([
+          refreshBalance(),
+          refreshHelpline(result.user?.id)
+        ]);
         const parentResult = await api.parentSession();
         if (parentResult.success || parentResult.parent_selection_required) {
           setParentSelection(parentResult);
@@ -34,6 +53,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         setParentSelection(result);
         setShowParentSelection(true);
+        setHelpline(null);
       } else {
         const parentResult = await api.parentSession();
         if (parentResult.success || parentResult.parent_selection_required) {
@@ -41,17 +61,19 @@ export function AuthProvider({ children }) {
           setParentSelection(parentResult);
           setShowParentSelection(true);
           setBalance(null);
+          setHelpline(null);
         } else {
           setUser(null);
           setParentSelection(null);
           setShowParentSelection(false);
           setBalance(null);
+          setHelpline(null);
         }
       }
     } finally {
       setLoading(false);
     }
-  }, [refreshBalance]);
+  }, [refreshBalance, refreshHelpline]);
 
   useEffect(() => {
     checkSession();
@@ -68,20 +90,26 @@ export function AuthProvider({ children }) {
       setUser(result.user);
       setParentSelection(null);
       setShowParentSelection(false);
-      await refreshBalance();
+      await Promise.all([
+        refreshBalance(),
+        refreshHelpline(result.user?.id)
+      ]);
     }
     return result;
-  }, [refreshBalance]);
+  }, [refreshBalance, refreshHelpline]);
 
   const selectChild = useCallback(async (childId) => {
     const result = await api.selectChild(childId);
     if (result.success) {
       setUser(result.user);
       setShowParentSelection(false);
-      await refreshBalance();
+      await Promise.all([
+        refreshBalance(),
+        refreshHelpline(result.user?.id)
+      ]);
     }
     return result;
-  }, [refreshBalance]);
+  }, [refreshBalance, refreshHelpline]);
 
   const switchAccount = useCallback(async () => {
     let nextSelection = parentSelection;
@@ -105,6 +133,7 @@ export function AuthProvider({ children }) {
     setParentSelection(null);
     setShowParentSelection(false);
     setBalance(null);
+    setHelpline(null);
   }, []);
 
   const value = useMemo(() => ({
@@ -112,14 +141,16 @@ export function AuthProvider({ children }) {
     parentSelection,
     showParentSelection,
     balance,
+    helpline,
     loading,
     login,
     logout,
     selectChild,
     switchAccount,
     checkSession,
-    refreshBalance
-  }), [user, parentSelection, showParentSelection, balance, loading, login, logout, selectChild, switchAccount, checkSession, refreshBalance]);
+    refreshBalance,
+    refreshHelpline
+  }), [user, parentSelection, showParentSelection, balance, helpline, loading, login, logout, selectChild, switchAccount, checkSession, refreshBalance, refreshHelpline]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

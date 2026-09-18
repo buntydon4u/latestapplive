@@ -80,6 +80,28 @@ if ($new_password !== '' && $confirm_password !== '' && $new_password !== $confi
         return $this->success(array(), 'Password changed successfully');
     }
 
+    public function master_helpline()
+    {
+        $this->require_method('GET');
+        $payload = $this->require_ledger_auth();
+        $ledger_id = (int) $payload['user_id'];
+
+        if (!empty($this->request_data['user_id']) && (int) $this->request_data['user_id'] !== $ledger_id) {
+            return $this->error('Cannot fetch helpline for another user', 403);
+        }
+
+        $helpline = $this->Account_model->get_master_helpline_for_ledger($ledger_id);
+
+        return $this->output
+            ->set_status_header(200)
+            ->set_output(json_encode(array(
+                'status' => true,
+                'helpline_number' => $helpline['helpline_number'],
+                'helpline_type' => $helpline['helpline_type'],
+                'can_whatsapp' => $helpline['can_whatsapp']
+            )));
+    }
+
     private function show_profile($ledger_id)
     {
         $profile = $this->Account_model->get_profile($ledger_id);

@@ -3,6 +3,17 @@ import { api } from '../lib/api.js';
 import { formatMoney } from '../components/DashboardLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
+function readHisabDate(hisab) {
+  const directDate = hisab?.date || hisab?.Date || hisab?.hisab_date || hisab?.selected_date || hisab?.t_date || hisab?.final_date;
+  if (directDate) return directDate;
+
+  // Some legacy responses use an undocumented date key. Find a date-shaped value
+  // rather than losing the selected date while building the detail URL.
+  return Object.values(hisab || {}).find((value) =>
+    /^(?:\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})/.test(String(value || '').trim())
+  ) || '';
+}
+
 function displayDate(value) {
   if (!value) return '--';
   const text = String(value).trim();
@@ -18,6 +29,19 @@ function displayDate(value) {
   }).replace(/^(\d{2} \w{3}) (\d{4})$/, '$1, $2');
 }
 
+function toIsoDate(value) {
+  const text = String(value || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+
+  const legacy = text.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (legacy) return `${legacy[3]}-${legacy[2]}-${legacy[1]}`;
+
+  const slashDate = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashDate) return `${slashDate[3]}-${slashDate[2]}-${slashDate[1]}`;
+
+  return '';
+}
+
 export default function Hisab({ onNavigate }) {
   const { user } = useAuth();
   const [hisabs, setHisabs] = useState([]);
@@ -31,18 +55,23 @@ export default function Hisab({ onNavigate }) {
   }, []);
 
   function openHisab(hisab) {
+    const selectedDate = readHisabDate(hisab);
+    const selectedDateIso = toIsoDate(hisab?.dateIso || selectedDate);
+    const selectedDateValue = selectedDateIso || String(selectedDate || '').trim();
     const search = new URLSearchParams({
       ledger_id: String(user?.id || ''),
-      date: String(hisab.date || ''),
+      date: selectedDateValue,
+      selected_date: selectedDateValue,
       master: String(hisab.updated_by || user?.updated_by || '')
     });
+    const searchString = search.toString();
 
     if (typeof onNavigate === 'function') {
-      onNavigate('hisabView', { search });
+      onNavigate('hisabView', { search: searchString });
       return;
     }
 
-    window.history.pushState({ page: 'hisabView' }, '', `/reports/hisab/view?${search.toString()}`);
+    window.history.pushState({ page: 'hisabView', search: searchString }, '', `/reports/hisab/view?${searchString}`);
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
@@ -67,8 +96,8 @@ export default function Hisab({ onNavigate }) {
           </thead>
           <tbody>
             {hisabs.map((hisab) => (
-              <tr key={hisab.date}>
-                <td>{displayDate(hisab.date)}</td>
+              <tr key={readHisabDate(hisab)}>
+                <td>{displayDate(readHisabDate(hisab))}</td>
                 <td>{formatMoney(hisab.today_hisab ?? hisab.final_hisab ?? 0)}</td>
                 <td>
                   <button className="badge-button" onClick={() => openHisab(hisab)} type="button">

@@ -44,4 +44,50 @@ class Account_model extends CI_Model
                 'updated_date' => date('Y-m-d H:i:s')
             ));
     }
+
+    public function get_master_helpline_for_ledger($ledger_id)
+    {
+        $ledger = $this->db
+            ->select('id, updated_by, status')
+            ->from('tbl_ledger')
+            ->where('id', (int) $ledger_id)
+            ->where('status', 1)
+            ->get()
+            ->row_array();
+
+        if (!$ledger || empty($ledger['updated_by'])) {
+            return array(
+                'helpline_number' => '',
+                'helpline_type' => 'call_only',
+                'can_whatsapp' => false
+            );
+        }
+
+        $master = $this->db
+            ->select('id, helpline_number, helpline_type')
+            ->from('tbl_ledger')
+            ->where('id', (int) $ledger['updated_by'])
+            ->where('is_master', 1)
+            ->where('status', 1)
+            ->get()
+            ->row_array();
+
+        if (!$master) {
+            return array(
+                'helpline_number' => '',
+                'helpline_type' => 'call_only',
+                'can_whatsapp' => false
+            );
+        }
+
+        $helpline_type = isset($master['helpline_type']) && $master['helpline_type'] === 'whatsapp'
+            ? 'whatsapp'
+            : 'call_only';
+
+        return array(
+            'helpline_number' => trim((string) $master['helpline_number']),
+            'helpline_type' => $helpline_type,
+            'can_whatsapp' => $helpline_type === 'whatsapp'
+        );
+    }
 }
