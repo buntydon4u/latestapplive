@@ -441,12 +441,19 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
   const [manualDraft, setManualDraft] = useState({ number: '', amount: '' });
   const [grid, setGrid] = useState({});
   const [notice, setNotice] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const [invalidNumAkharStatements, setInvalidNumAkharStatements] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const numAkharTextareaRef = useRef(null);
   const submitLockRef = useRef(false);
   const ledgerId = user?.id;
   const currentDateDisplay = todayDisplay();
+
+  useEffect(() => {
+    if (!showSuccess) return;
+    const timer = window.setTimeout(() => setShowSuccess(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [showSuccess]);
 
   useEffect(() => {
     api.shifts().then((shiftResult) => {
@@ -567,6 +574,7 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
     submitLockRef.current = true;
     setIsSubmitting(true);
     setNotice('');
+    setShowSuccess(false);
     try {
       if (!ledgerId || !meta.shift) {
         setNotice('Select shift before submitting.');
@@ -594,8 +602,9 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
       };
 
       const result = await api.submitTransaction(payload);
-      setNotice(result.success ? 'Entry submitted.' : (result.error || 'Submission failed.'));
+      setNotice(result.success ? '' : (result.error || 'Submission failed.'));
       if (result.success) {
+        setShowSuccess(true);
         setRows([]);
         setManualDraft({ number: '', amount: '' });
         refreshBalance();
@@ -608,6 +617,14 @@ export default function DataEntry({ initialMode = tabs[0], initialShift = '' }) 
 
   return (
     <div className="page-stack">
+      <div className="transaction-success-region" role="status" aria-live="polite" aria-atomic="true">
+        {showSuccess && (
+          <div className="transaction-success-alert">
+            <span>Transaction recorded successfully.</span>
+            <button type="button" aria-label="Dismiss success alert" onClick={() => setShowSuccess(false)}>×</button>
+          </div>
+        )}
+      </div>
       <div className="entry-page-head">
         <span />
         <div className="entry-date-chip">

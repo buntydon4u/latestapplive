@@ -16,14 +16,6 @@ function fieldValue(profile, field) {
   return profile?.[field] ?? '';
 }
 
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="helpline-icon">
-      <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.3 1.3.4 2.6.6 4 .6.7 0 1.2.5 1.2 1.2v3.5c0 .7-.5 1.2-1.2 1.2C10.4 21.9 2.1 13.6 2.1 3.4c0-.7.5-1.2 1.2-1.2h3.5c.7 0 1.2.5 1.2 1.2 0 1.4.2 2.7.6 4 .1.4 0 .9-.3 1.2l-1.7 2.2Z" />
-    </svg>
-  );
-}
-
 function WhatsAppIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="helpline-icon">
@@ -115,7 +107,6 @@ export default function AccountProfile() {
   }
 
   const hasHelpline = Boolean(helpline?.helpline_number);
-  const isWhatsapp = helpline?.helpline_type === 'whatsapp';
 
   return (
     <div className="page-stack account-page">
@@ -138,13 +129,13 @@ export default function AccountProfile() {
                   <b>{helpline.helpline_number}</b>
                 </div>
                 <button
-                  className={`helpline-action ${isWhatsapp ? 'whatsapp' : 'phone'}`}
+                  className="helpline-action whatsapp"
                   onClick={openHelpline}
-                  title={isWhatsapp ? 'Open WhatsApp' : 'Call master'}
+                  title="Open WhatsApp"
                   type="button"
-                  aria-label={isWhatsapp ? 'Open WhatsApp helpline' : 'Call master helpline'}
+                  aria-label="Open WhatsApp helpline"
                 >
-                  {isWhatsapp ? <WhatsAppIcon /> : <PhoneIcon />}
+                  <WhatsAppIcon />
                 </button>
               </div>
             ) : null}

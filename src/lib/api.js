@@ -62,12 +62,6 @@ function normalizeResponse(json, fallbackStatus) {
   };
 }
 
-export function sanitizePhoneHrefNumber(value) {
-  const raw = String(value || '').trim();
-  const prefix = raw.startsWith('+') ? '+' : '';
-  return `${prefix}${raw.replace(/\D/g, '')}`;
-}
-
 export function sanitizeWhatsappNumber(value) {
   return String(value || '').replace(/[+\s\-()]/g, '').replace(/\D/g, '');
 }
@@ -76,15 +70,10 @@ export function buildHelplineHref(helpline) {
   const number = helpline?.helpline_number || '';
   if (!number) return '';
 
-  if (helpline?.helpline_type === 'whatsapp') {
-    const whatsappNumber = sanitizeWhatsappNumber(number);
-    if (!whatsappNumber) return '';
-    const message = encodeURIComponent('Hello, I need help with my account.');
-    return `https://wa.me/${whatsappNumber}?text=${message}`;
-  }
-
-  const phoneNumber = sanitizePhoneHrefNumber(number);
-  return phoneNumber ? `tel:${phoneNumber}` : '';
+  const whatsappNumber = sanitizeWhatsappNumber(number);
+  if (!whatsappNumber) return '';
+  const message = encodeURIComponent('Hello, I need help with my account.');
+  return `https://wa.me/${whatsappNumber}?text=${message}`;
 }
 
 async function request(path, options = {}) {
@@ -294,11 +283,9 @@ export const api = {
   masterHelpline: async (user_id) => {
     const result = await request('master-helpline', { params: { user_id } });
     const raw = result.data && typeof result.data === 'object' ? result.data : result;
-    const helpline_type = raw.helpline_type === 'whatsapp' ? 'whatsapp' : 'call_only';
     const helpline = {
       helpline_number: raw.helpline_number || '',
-      helpline_type,
-      can_whatsapp: helpline_type === 'whatsapp'
+      can_whatsapp: Boolean(raw.helpline_number)
     };
     return { ...result, helpline };
   },

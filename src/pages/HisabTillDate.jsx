@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api.js';
 import { EmptyState, LoadingState, formatMoney } from '../components/DashboardLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -111,10 +111,10 @@ function pickValue(row, keys, fallback = '--') {
 
 function normalizeLedgerRow(row, index, kind, fallbackDate) {
   // Desktop ledger_till_date_reports displays the transaction-derived finalsum.
-  const transactionTotal = toAmount(row?.finalsum);
-  const total = transactionTotal || toAmount(
-    row?.Total_Number_amount
+  const total = toAmount(
+    row?.finalsum
       ?? row?.tamnt
+      ?? row?.Total_Number_amount
       ?? row?.total
       ?? row?.amount
       ?? 0
@@ -249,63 +249,20 @@ export default function HisabTillDate({ onNavigate }) {
     }, { total: 0, debit: 0, credit: 0 });
   }, [todayRows]);
 
-    const summary = report?.summary || {};
-
-  const readSummaryNumber = (key) => {
-    const value = summary[key];
-
-    if (
-      value === null ||
-      value === undefined ||
-      String(value).trim() === ''
-    ) {
-      return null;
-    }
-
-    const parsed = Number(String(value).replace(/,/g, ''));
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-
-  const formatSummaryMoney = (value) =>
-    value === null ? '—' : formatMoney(value);
-
-  const commission = readSummaryNumber('commission');
-  const dAmount = readSummaryNumber('d_amount');
-  const aAmount = readSummaryNumber('a_amount');
-  const total = readSummaryNumber('total');
-  const pattiAmount = readSummaryNumber('patti_amount');
-  const opening = readSummaryNumber('opening');
-  const totalToday = readSummaryNumber('today_hisab');
-  const payment = readSummaryNumber('payment');
-  const closing = readSummaryNumber('closing');
-  const finalTotal = readSummaryNumber('final_total');
-
-  const summaryRows = [
-    [
-      { label: 'Commission', value: formatSummaryMoney(commission) },
-      { label: 'D-Amount', value: formatSummaryMoney(dAmount) }
-    ],
-    [
-      { label: 'A-Amount', value: formatSummaryMoney(aAmount) },
-      { label: 'Total', value: formatSummaryMoney(total) }
-    ],
-    [
-      { spacer: true },
-      { spacer: true }
-    ],
-    [
-      { label: 'Patti AMT.', value: formatSummaryMoney(pattiAmount) },
-      { label: 'Balance', value: formatSummaryMoney(opening) }
-    ],
-    [
-      { label: 'Total Today', value: formatSummaryMoney(totalToday) },
-      { label: 'Payment', value: formatSummaryMoney(payment) }
-    ],
-    [
-      { label: 'Closing', value: formatSummaryMoney(closing) },
-      { label: 'Final Total', value: formatSummaryMoney(finalTotal) }
-    ]
-  ];
+  const summary = report?.summary || {};
+  const totalToday = toAmount(summary.total_today ?? todayTotals.total);
+  const dAmount = toAmount(summary.total_d ?? todayTotals.debit);
+  const aAmount = toAmount(summary.total_a ?? todayTotals.credit);
+  const commissionRate = todayRows[0]?.rate || toAmount(summary.commission_rate || 0);
+  const commission = Number((todayTotals.total * commissionRate) / 100);
+  const netBalance = Number(report?.summary?.running_total ?? (todayTotals.total - todayTotals.debit + todayTotals.credit));
+  const opening = toAmount(
+    summary.opening
+      ?? summary.netbalance
+      ?? summary.net_balance
+      ?? netBalance
+  );
+  const closing = Number(report?.summary?.closing ?? netBalance);
 
   function backToHisab() {
     if (typeof onNavigate === 'function') {
@@ -410,7 +367,7 @@ export default function HisabTillDate({ onNavigate }) {
 
               <tr className="hisab-total-row">
                 <td colSpan="2" className="hisab-total-label">Totals</td>
-                <td className="hisab-amount-cell">{formatMoney(todayTotals.total || summary.total_today || 0)}</td>
+                <td className="hisab-amount-cell">{formatMoney(todayTotals.total)}</td>
                 <td className="hisab-amount-cell">{formatMoney(summary.total_d ?? todayTotals.debit)}</td>
                 <td className="hisab-amount-cell">{formatMoney(summary.total_a ?? todayTotals.credit)}</td>
                 <td className="hisab-amount-cell">{formatMoney(todayTotals.total || summary.total_today || 0)}</td>
@@ -427,34 +384,6 @@ export default function HisabTillDate({ onNavigate }) {
             detail="There are no transactions or hisab rows available for the selected date."
           />
         ) : null}
-      </section>
-
-      <section className="panel hisab-legacy-summary-panel">
-        <div className="panel-heading hisab-legacy-summary-heading">
-          <div>
-            <h3>Hisab summary fields</h3>
-            <p>Same ledger fields shown in the desktop hisab page.</p>
-          </div>
-        </div>
-        <table className="hisab-legacy-summary">
-          <tbody>
-            {summaryRows.map((row, rowIndex) => (
-              <tr
-                key={`hisab-summary-${rowIndex}`}
-                className={row[0].spacer ? 'hisab-summary-spacer' : undefined}
-              >
-                {row[0].spacer ? (
-                  <td colSpan="4" aria-hidden="true">&nbsp;</td>
-                ) : row.map((cell) => (
-                  <Fragment key={cell.label}>
-                    <th scope="row">{cell.label}</th>
-                    <td>{cell.value}</td>
-                  </Fragment>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </section>
 
     </div>

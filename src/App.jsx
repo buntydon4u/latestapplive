@@ -70,22 +70,22 @@ function AppRoutes() {
   }
 
   const pages = {
-    home: () => <Home onNavigate={navigate} onPlayShift={navigateToEntry} />,
-    wallet: Wallet,
-    history: GameHistory,
-    chart: ChartResults,
-    entry: () => <DataEntry initialMode="Entry" initialShift={selectedShiftId} />,
-    fromto: () => <DataEntry initialMode="From-To" initialShift={selectedShiftId} />,
-    cross: () => <DataEntry initialMode="Cross" initialShift={selectedShiftId} />,
-    jantri: PartyJantri,
-    results: ViewResults,
-    hisab: () => <Hisab onNavigate={navigate} />,
-    hisabView: () => <HisabTillDate onNavigate={navigate} />,
-    statement: Statement,
-    accountProfile: AccountProfile,
-    changePassword: ChangePassword
+    home: <Home onNavigate={navigate} onPlayShift={navigateToEntry} />,
+    wallet: <Wallet />,
+    history: <GameHistory />,
+    chart: <ChartResults />,
+    entry: <DataEntry key="entry" initialMode="Entry" initialShift={selectedShiftId} />,
+    fromto: <DataEntry key="fromto" initialMode="From-To" initialShift={selectedShiftId} />,
+    cross: <DataEntry key="cross" initialMode="Cross" initialShift={selectedShiftId} />,
+    jantri: <PartyJantri />,
+    results: <ViewResults />,
+    hisab: <Hisab onNavigate={navigate} />,
+    hisabView: <HisabTillDate onNavigate={navigate} />,
+    statement: <Statement />,
+    accountProfile: <AccountProfile />,
+    changePassword: <ChangePassword />
   };
-  const Page = pages[activePage] || pages.home;
+  const page = pages[activePage] || pages.home;
 
   useEffect(() => {
     if (!user) {
@@ -117,7 +117,7 @@ function AppRoutes() {
 
   return (
     <DashboardLayout activePage={activePage} onNavigate={navigate}>
-      {typeof Page === 'function' ? <Page /> : <Page />}
+      {page}
     </DashboardLayout>
   );
 }

@@ -58,13 +58,12 @@ class Account_model extends CI_Model
         if (!$ledger || empty($ledger['updated_by'])) {
             return array(
                 'helpline_number' => '',
-                'helpline_type' => 'call_only',
                 'can_whatsapp' => false
             );
         }
 
         $master = $this->db
-            ->select('id, helpline_number, helpline_type')
+            ->select('id, helpline_number')
             ->from('tbl_ledger')
             ->where('id', (int) $ledger['updated_by'])
             ->where('is_master', 1)
@@ -75,19 +74,15 @@ class Account_model extends CI_Model
         if (!$master) {
             return array(
                 'helpline_number' => '',
-                'helpline_type' => 'call_only',
                 'can_whatsapp' => false
             );
         }
 
-        $helpline_type = isset($master['helpline_type']) && $master['helpline_type'] === 'whatsapp'
-            ? 'whatsapp'
-            : 'call_only';
+        $helpline_number = trim((string) $master['helpline_number']);
 
         return array(
-            'helpline_number' => trim((string) $master['helpline_number']),
-            'helpline_type' => $helpline_type,
-            'can_whatsapp' => $helpline_type === 'whatsapp'
+            'helpline_number' => $helpline_number,
+            'can_whatsapp' => $helpline_number !== ''
         );
     }
 }

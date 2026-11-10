@@ -90,12 +90,17 @@ class Result_model extends CI_Model
             $formatted_date,
             $row['shift_id']
         );
+<<<<<<< Updated upstream
         // Some installations do not expose transaction rows to the API
         // account, while the desktop report still has the daily total on the
         // date-shift summary row.
         if ($row['finalsum'] == 0 && (float) ($row['Total_Number_amount'] ?? 0) != 0) {
             $row['finalsum'] = (float) $row['Total_Number_amount'];
         }
+=======
+        // Zero is a valid transaction total. Do not replace it with the
+        // independently stored date-shift total used by another calculation.
+>>>>>>> Stashed changes
         $row['tamnt'] = $row['finalsum'];
 
         if ((int) ($row['status'] ?? 0) !== 0) {

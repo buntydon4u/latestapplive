@@ -97,7 +97,6 @@ if ($new_password !== '' && $confirm_password !== '' && $new_password !== $confi
             ->set_output(json_encode(array(
                 'status' => true,
                 'helpline_number' => $helpline['helpline_number'],
-                'helpline_type' => $helpline['helpline_type'],
                 'can_whatsapp' => $helpline['can_whatsapp']
             )));
     }
