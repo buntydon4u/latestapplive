@@ -32,6 +32,18 @@ function toIsoDate(value) {
   }
 
   const parsed = new Date(text.includes('/') ? text.replace(/\//g, '-') : text);
+  const slashDate = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashDate) {
+    return `${slashDate[3]}-${slashDate[2]}-${slashDate[1]}`;
+  }
+
+  const shortYear = text.match(/^(\d{2})-(\d{2})-(\d{2})$/);
+  if (shortYear) {
+    const year = Number(shortYear[3]) >= 70 ? `19${shortYear[3]}` : `20${shortYear[3]}`;
+    return `${year}-${shortYear[2]}-${shortYear[1]}`;
+  }
+
+  const parsed = new Date(text.includes('/') ? text.replace(/\//g, '-') : text);
   if (Number.isNaN(parsed.getTime())) return '';
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
 }
@@ -107,6 +119,15 @@ function normalizeLedgerRow(row, index, kind, fallbackDate) {
       ?? row?.amount
       ?? 0
   );
+  // Desktop ledger_till_date_reports displays the transaction-derived finalsum.
+  const transactionTotal = toAmount(row?.finalsum);
+  const total = transactionTotal || toAmount(
+    row?.Total_Number_amount
+      ?? row?.tamnt
+      ?? row?.total
+      ?? row?.amount
+      ?? 0
+  );
   const debit = toAmount(row?.oamnt ?? row?.debit ?? 0);
   const credit = toAmount(row?.akmnt ?? row?.credit ?? 0);
   const date = row?.Date || row?.date || row?.opendate || fallbackDate || '';
@@ -150,6 +171,14 @@ export default function HisabTillDate({ onNavigate }) {
           return;
         }
 
+        const reportDate = toIsoDate(nextQuery.date);
+        if (!reportDate) {
+          setReport(null);
+          setNotice('Selected hisab date is missing. Please return to the hisab list and select a date.');
+          setLoading(false);
+          return;
+        }
+
         const result = await api.ledgerTillDateReport({
           ledger_id: nextQuery.ledger_id || user?.id || '',
           date: reportDate,
@@ -179,6 +208,7 @@ export default function HisabTillDate({ onNavigate }) {
       active = false;
     };
   }, [query.date, query.ledger_id, query.master, user?.id, user?.updated_by]);
+  }, [query.date, query.ledger_id, query.master, user?.id, user?.updated_by]);
 
   useEffect(() => {
     function syncFromLocation() {
@@ -191,9 +221,11 @@ export default function HisabTillDate({ onNavigate }) {
 
   const ledger = report?.report?.ledger || report?.ledger || {};
   const firstTodayRow = Array.isArray(report?.today) ? report.today[0] || {} : {};
+  const firstTodayRow = Array.isArray(report?.today) ? report.today[0] || {} : {};
   const partyName = pickName(
     ledger.ledger_name,
     ledger.name,
+    firstTodayRow.ledger_name,
     firstTodayRow.ledger_name,
     user?.ledger_name,
     user?.name,
@@ -378,6 +410,9 @@ export default function HisabTillDate({ onNavigate }) {
 
               <tr className="hisab-total-row">
                 <td colSpan="2" className="hisab-total-label">Totals</td>
+                <td className="hisab-amount-cell">{formatMoney(todayTotals.total || summary.total_today || 0)}</td>
+                <td className="hisab-amount-cell">{formatMoney(summary.total_d ?? todayTotals.debit)}</td>
+                <td className="hisab-amount-cell">{formatMoney(summary.total_a ?? todayTotals.credit)}</td>
                 <td className="hisab-amount-cell">{formatMoney(todayTotals.total || summary.total_today || 0)}</td>
                 <td className="hisab-amount-cell">{formatMoney(summary.total_d ?? todayTotals.debit)}</td>
                 <td className="hisab-amount-cell">{formatMoney(summary.total_a ?? todayTotals.credit)}</td>

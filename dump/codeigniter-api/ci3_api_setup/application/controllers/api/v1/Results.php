@@ -9,7 +9,6 @@ class Results extends Api_Controller
     {
         parent::__construct();
         $this->load->model('Result_model');
-        $this->load->model('Tbl_openno_model');
     }
 
     public function ledger_till_date_reports_api()
@@ -57,7 +56,7 @@ class Results extends Api_Controller
         'date' => $report_date
     );
 
-    $result = $this->Tbl_openno_model
+    $result = $this->Result_model
         ->ledger_till_date_result_today_api($params);
 
     $result['selected_date'] = $report_date;
